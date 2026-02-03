@@ -41,6 +41,26 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: #333; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 5px; }
+
+        /* Chat Modal */
+        #chat-modal {
+            transition: opacity 0.3s ease, visibility 0.3s;
+        }
+        #chat-modal.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* Side Menu Overlay */
+        #menu-overlay {
+            transition: opacity 0.3s ease, visibility 0.3s;
+        }
+        #menu-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
     </style>
     <!-- Three.js CDN -->
     <script type="importmap">
@@ -73,6 +93,19 @@
         </div>
     </div>
 
+    <!-- Chat Modal -->
+    <div id="chat-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 pointer-events-auto">
+        <div class="bg-gray-900 rounded-xl w-full max-w-4xl h-[80vh] flex flex-col border border-pink-500/30 overflow-hidden relative" id="chat-content">
+            <button id="close-chat" class="absolute top-2 right-4 text-white text-3xl font-bold hover:text-red-500 z-10">&times;</button>
+            <div class="flex-1 w-full h-full bg-white">
+                <iframe src="https://organizations.minnit.chat/756857056139661/Main" style="border:none;width:100%;height:100%;" allowTransparency="true"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Overlay -->
+    <div id="menu-overlay" class="hidden fixed inset-0 z-20 bg-black/50 backdrop-blur-sm pointer-events-auto"></div>
+
     <!-- 3D Container -->
     <canvas id="game-canvas"></canvas>
 
@@ -81,11 +114,12 @@
         
         <!-- Top Stats -->
         <div class="flex flex-col gap-2 pointer-events-auto">
-            <div class="flex gap-4 items-center bg-black/50 p-2 rounded-lg backdrop-blur-sm w-fit flex-wrap">
+            <div class="flex gap-3 items-center bg-black/50 p-2 rounded-lg backdrop-blur-sm w-fit flex-wrap">
                 <div class="flex items-center gap-1"><span class="text-xl">💰</span> <span id="money-display" class="font-mono text-lg text-white font-bold">0</span></div>
                 <div class="flex items-center gap-1"><span class="text-lg">💎</span> <span id="gems-display" class="font-mono text-base text-cyan-300 font-bold">0</span></div>
                 <div class="flex items-center gap-1"><span class="text-lg">⭐</span> <span id="stars-display" class="font-mono text-base text-yellow-400 font-bold">0</span></div>
                 <div class="flex items-center gap-1"><span class="text-lg">🧪</span> <span id="flasks-display" class="font-mono text-base text-green-400 font-bold">0</span></div>
+                <div class="flex items-center gap-1"><span class="text-lg">🔮</span> <span id="orbs-display" class="font-mono text-base text-purple-400 font-bold">0</span></div>
             </div>
             <div class="bg-black/40 p-1 px-3 rounded-lg backdrop-blur-sm w-fit text-xs text-gray-300">
                 Перерождения: <span id="rebirth-display" class="text-white font-bold">0</span> (x<span id="multiplier-display">1.0</span>)
@@ -97,21 +131,31 @@
             <span id="progress-display" class="text-2xl font-bold text-white">0/10</span>
         </div>
 
-        <!-- Burger Menu Button -->
-        <button id="menu-btn" class="absolute bottom-6 left-6 pointer-events-auto bg-pink-600 hover:bg-pink-700 text-white p-3 rounded-full shadow-lg transition-transform active:scale-95 z-20">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-        </button>
+        <!-- Bottom Controls Container -->
+        <div class="w-full flex justify-between items-end pointer-events-none">
+             <!-- Burger Menu Button -->
+            <button id="menu-btn" class="pointer-events-auto bg-pink-600 hover:bg-pink-700 text-white p-3 rounded-full shadow-lg transition-transform active:scale-95 z-20 mb-2 ml-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+
+            <!-- Chat Button -->
+            <button id="chat-btn" class="pointer-events-auto bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-transform active:scale-95 z-20 mb-2 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+            </button>
+        </div>
 
         <!-- Tap Area Hint -->
-        <div class="absolute bottom-10 w-full text-center pointer-events-none opacity-50 text-white text-sm">
+        <div class="absolute bottom-20 w-full text-center pointer-events-none opacity-50 text-white text-sm">
             Тапай по экрану для добычи
         </div>
     </div>
 
     <!-- Side Menu -->
-    <div id="side-menu" class="fixed top-0 left-0 h-full w-80 bg-gray-900/95 backdrop-blur-md transform -translate-x-full transition-transform duration-300 z-30 border-r border-gray-700 flex flex-col pointer-events-auto">
+    <div id="side-menu" class="fixed top-0 left-0 h-full w-80 bg-gray-900/95 backdrop-blur-md transform -translate-x-full transition-transform duration-300 z-30 border-r border-gray-700 flex flex-col pointer-events-auto shadow-2xl">
         <div class="p-4 border-b border-gray-700 flex justify-between items-center">
             <h2 class="text-xl font-bold text-pink-500">Меню</h2>
             <button id="close-menu" class="text-gray-400 hover:text-white">&times;</button>
@@ -119,27 +163,40 @@
         
         <div class="flex-1 overflow-y-auto p-4 space-y-4">
             
+            <!-- Promo Code Section -->
+            <div class="bg-gray-800 p-3 rounded-lg border border-yellow-500/30">
+                <h3 class="text-lg font-bold text-yellow-400 mb-2">🎁 Промокод</h3>
+                <div class="flex gap-2">
+                    <input id="promo-input" type="text" placeholder="Введите код" class="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-pink-500 uppercase">
+                    <button onclick="game.redeemCode()" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm font-bold">OK</button>
+                </div>
+            </div>
+
             <!-- Exchange Section -->
             <div class="bg-gray-800 p-3 rounded-lg">
                 <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">🛒 Обменник</h3>
                 <button onclick="game.exchange('gem')" class="w-full mb-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm flex justify-between px-2">
                     <span>Купить 1 💎</span>
-                    <span class="text-blue-200">100k 💰</span>
+                    <span class="text-blue-200">10k 💰</span>
                 </button>
                 <button onclick="game.exchange('star')" class="w-full mb-2 bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded text-sm flex justify-between px-2">
                     <span>Купить 1 ⭐</span>
-                    <span class="text-yellow-200">1000 💎</span>
+                    <span class="text-yellow-200">100 💎</span>
                 </button>
-                <button onclick="game.exchange('flask')" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded text-sm flex justify-between px-2">
+                <button onclick="game.exchange('flask')" class="w-full mb-2 bg-green-600 hover:bg-green-700 text-white py-2 rounded text-sm flex justify-between px-2">
                     <span>Купить 1 🧪</span>
-                    <span class="text-green-200">100 ⭐</span>
+                    <span class="text-green-200">10 ⭐</span>
+                </button>
+                <button onclick="game.exchange('orb')" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded text-sm flex justify-between px-2">
+                    <span>Купить 1 🔮</span>
+                    <span class="text-purple-200">10 🧪</span>
                 </button>
             </div>
 
             <!-- Skins Section -->
             <div class="bg-gray-800 p-3 rounded-lg border border-pink-500/20">
                 <h3 class="text-lg font-bold text-pink-300 mb-2">👕 Скины</h3>
-                <div id="skins-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                <div id="skins-list" class="space-y-2 max-h-64 overflow-y-auto pr-1">
                     <!-- Populated by JS -->
                 </div>
             </div>
@@ -174,7 +231,7 @@
             </div>
             
             <div class="text-center mt-8">
-                <p class="text-xs text-gray-600">peni game S v3.1</p>
+                <p class="text-xs text-gray-600">peni game S v3.6</p>
             </div>
         </div>
     </div>
@@ -199,21 +256,43 @@
             'https://ltdfoto.ru/images/2026/02/03/25095.jpg'
         ];
 
-        // Updated Skins
+        // Updated Skins with new values and new additions
         const SKINS_DATA = {
             'default': { name: 'Обычный', cost: 0, currency: 'money', mult: 1.0, color: 0xffffff },
-            'dark': { name: 'Dark', cost: 25000, currency: 'money', mult: 1.2, color: 0x333333 },
-            'gold': { name: 'Gold', cost: 50, currency: 'gem', mult: 2.5, color: 0xffd700 },
-            'ruby': { name: 'Ruby', cost: 25, currency: 'star', mult: 5.0, color: 0xe0115f },
-            'nuclear': { name: 'Ядерный ствол', cost: 10, currency: 'flask', mult: 10.0, color: 0x39ff14 },
-            'void': { name: 'Void', cost: 500, currency: 'flask', mult: 50.0, color: 0x000000 }
+            'pinky': { name: 'Pinky', cost: 1000, currency: 'money', mult: 1.1, color: 0xff69b4 },
+            'lime': { name: 'Lime', cost: 5000, currency: 'money', mult: 1.15, color: 0xccff00 },
+            'dark': { name: 'Dark', cost: 25000, currency: 'money', mult: 1.5, color: 0x333333 },
+            
+            // Gem Skins
+            'sapphire': { name: 'Сапфир', cost: 5, currency: 'gem', mult: 2.0, color: 0x0f52ba },
+            'emerald': { name: 'Изумруд', cost: 10, currency: 'gem', mult: 3.0, color: 0x50c878 },
+            'gold': { name: 'Gold', cost: 50, currency: 'gem', mult: 4.0, color: 0xffd700 },
+            
+            // Star Skins
+            'amethyst': { name: 'Аметист', cost: 1, currency: 'star', mult: 6.0, color: 0x9966cc },
+            'nebula': { name: 'Туманность', cost: 5, currency: 'star', mult: 8.0, color: 0x4b0082 },
+            'sun': { name: 'Солнце', cost: 10, currency: 'star', mult: 9.5, color: 0xffa500 },
+            'ruby': { name: 'Рубин', cost: 25, currency: 'star', mult: 10.0, color: 0xe0115f },
+            
+            // Flask Skins
+            'toxic': { name: 'Токсик', cost: 5, currency: 'flask', mult: 15.0, color: 0x76ff03 },
+            'nuclear': { name: 'Ядерный', cost: 10, currency: 'flask', mult: 25.0, color: 0x39ff14 },
+            'plasma': { name: 'Плазма', cost: 25, currency: 'flask', mult: 35.0, color: 0xdc143c },
+            'magma': { name: 'Магма', cost: 50, currency: 'flask', mult: 50.0, color: 0xff4500 },
+            'ice': { name: 'Абсолютный ноль', cost: 100, currency: 'flask', mult: 75.0, color: 0xa5f2f3 },
+            'antimatter': { name: 'Антиматерия', cost: 250, currency: 'flask', mult: 90.0, color: 0x111111 },
+            'void': { name: 'Пустота', cost: 500, currency: 'flask', mult: 100.0, color: 0x000000 },
+            
+            // Orb Skins
+            'mystic': { name: 'Мистик', cost: 1, currency: 'orb', mult: 500.0, color: 0x9932cc }
         };
 
         const CURRENCY_MAP = {
             'money': { prop: 'money', icon: '💰' },
             'gem': { prop: 'gems', icon: '💎' },
             'star': { prop: 'stars', icon: '⭐' },
-            'flask': { prop: 'flasks', icon: '🧪' }
+            'flask': { prop: 'flasks', icon: '🧪' },
+            'orb': { prop: 'orbs', icon: '🔮' }
         };
 
         const SAVE_KEY = 'peniGameS_universal_save';
@@ -227,11 +306,13 @@
                     gems: 0,
                     stars: 0,
                     flasks: 0,
+                    orbs: 0,
                     rebirths: 0,
                     currentProgress: 0,
                     unlockedSkins: ['default'],
                     equippedSkin: 'default',
-                    optimized: false
+                    optimized: true, 
+                    redeemedCodes: []
                 };
                 
                 this.clickHeat = 0;
@@ -246,6 +327,7 @@
                     gems: document.getElementById('gems-display'),
                     stars: document.getElementById('stars-display'),
                     flasks: document.getElementById('flasks-display'),
+                    orbs: document.getElementById('orbs-display'),
                     rebirth: document.getElementById('rebirth-display'),
                     multiplier: document.getElementById('multiplier-display'),
                     progress: document.getElementById('progress-display'),
@@ -253,13 +335,18 @@
                     loadingScreen: document.getElementById('loading-screen'),
                     optToggle: document.getElementById('opt-toggle'),
                     menu: document.getElementById('side-menu'),
+                    menuOverlay: document.getElementById('menu-overlay'),
                     menuBtn: document.getElementById('menu-btn'),
                     closeMenu: document.getElementById('close-menu'),
                     rebirthCost: document.getElementById('rebirth-cost'),
                     rebirthMultVal: document.getElementById('rebirth-mult-val'),
                     redOverlay: document.getElementById('red-overlay'),
                     explosionMsg: document.getElementById('explosion-msg'),
-                    skinsList: document.getElementById('skins-list')
+                    skinsList: document.getElementById('skins-list'),
+                    chatBtn: document.getElementById('chat-btn'),
+                    chatModal: document.getElementById('chat-modal'),
+                    closeChat: document.getElementById('close-chat'),
+                    promoInput: document.getElementById('promo-input')
                 };
 
                 this.initUI();
@@ -291,7 +378,11 @@
                         this.state.gems = Number(this.state.gems) || 0;
                         this.state.stars = Number(this.state.stars) || 0;
                         this.state.flasks = Number(this.state.flasks) || 0;
+                        this.state.orbs = Number(this.state.orbs) || 0;
                         this.state.currentProgress = Number(this.state.currentProgress) || 0;
+                        if (typeof this.state.optimized === 'undefined') this.state.optimized = true;
+                        if (!this.state.redeemedCodes) this.state.redeemedCodes = [];
+                        
                         if(this.state.currentProgress >= 10) this.state.currentProgress = 0;
                     } catch (e) {
                         console.error("Save corrupted", e);
@@ -339,7 +430,6 @@
                 if (this.state.currentProgress >= 10) {
                     this.state.currentProgress = 0;
                     
-                    // Logic: Determine rarity based on luck
                     const luck = Math.random();
                     let type = 'white';
                     let baseReward = 12;
@@ -351,7 +441,6 @@
                         type = 'yellow';
                         baseReward = 50;
                     }
-                    // 80% White -> 12
 
                     this.payout(baseReward);
                     sceneManager.erupt(type);
@@ -393,23 +482,49 @@
 
             exchange(type) {
                 if (type === 'gem') {
-                    if (this.state.money >= 100000) {
-                        this.state.money -= 100000;
+                    if (this.state.money >= 10000) { 
+                        this.state.money -= 10000;
                         this.state.gems++;
                     }
                 } else if (type === 'star') {
-                    if (this.state.gems >= 1000) {
-                        this.state.gems -= 1000;
+                    if (this.state.gems >= 100) { 
+                        this.state.gems -= 100;
                         this.state.stars++;
                     }
                 } else if (type === 'flask') {
-                    if (this.state.stars >= 100) {
-                        this.state.stars -= 100;
+                    if (this.state.stars >= 10) { 
+                        this.state.stars -= 10;
                         this.state.flasks++;
+                    }
+                } else if (type === 'orb') {
+                    if (this.state.flasks >= 10) { 
+                        this.state.flasks -= 10;
+                        this.state.orbs++;
                     }
                 }
                 this.updateUI();
                 this.save();
+            }
+
+            redeemCode() {
+                const code = this.ui.promoInput.value.trim().toUpperCase();
+                if(!code) return;
+
+                if (this.state.redeemedCodes.includes(code)) {
+                    alert("Этот промокод уже использован!");
+                    return;
+                }
+
+                if (code === "РЕЛИЗ") {
+                    this.state.money += 10000;
+                    this.state.redeemedCodes.push(code);
+                    alert("Промокод активирован! Вы получили 10,000 💰");
+                    this.updateUI();
+                    this.save();
+                } else {
+                    alert("Неверный промокод");
+                }
+                this.ui.promoInput.value = "";
             }
 
             doRebirth() {
@@ -444,7 +559,7 @@
             equipSkin(key) {
                 if (this.state.unlockedSkins.includes(key)) {
                     this.state.equippedSkin = key;
-                    sceneManager.updateSkin(SKINS_DATA[key].color);
+                    sceneManager.updateSkin(key);
                     this.renderSkinsList();
                     this.updateUI();
                     this.save();
@@ -497,10 +612,7 @@
             }
 
             startBackgroundRotation() {
-                // Set initial background
                 this.setRandomBackground();
-                
-                // Rotate every 30 seconds
                 setInterval(() => {
                     this.setRandomBackground();
                 }, 30000);
@@ -520,14 +632,35 @@
             }
 
             initUI() {
-                this.ui.menuBtn.onclick = () => {
+                const openMenu = () => {
                     this.ui.menu.style.transform = "translateX(0)";
+                    this.ui.menuOverlay.classList.remove('hidden');
                     this.updateRebirthUI();
                     this.renderSkinsList();
                 };
-                this.ui.closeMenu.onclick = () => {
+                
+                const closeMenu = () => {
                     this.ui.menu.style.transform = "translateX(-100%)";
+                    this.ui.menuOverlay.classList.add('hidden');
                 };
+
+                this.ui.menuBtn.onclick = openMenu;
+                this.ui.closeMenu.onclick = closeMenu;
+                this.ui.menuOverlay.onclick = closeMenu;
+
+                // Chat UI
+                this.ui.chatBtn.onclick = () => {
+                    this.ui.chatModal.classList.remove('hidden');
+                };
+                this.ui.closeChat.onclick = () => {
+                    this.ui.chatModal.classList.add('hidden');
+                };
+                // Close chat on click outside
+                this.ui.chatModal.addEventListener('click', (e) => {
+                    if (e.target === this.ui.chatModal) {
+                         this.ui.chatModal.classList.add('hidden');
+                    }
+                });
 
                 setTimeout(() => {
                     this.ui.loadingBar.style.width = "100%";
@@ -541,8 +674,8 @@
                 this.updateUI();
                 
                 setTimeout(() => {
-                    if (sceneManager && SKINS_DATA[this.state.equippedSkin]) {
-                        sceneManager.updateSkin(SKINS_DATA[this.state.equippedSkin].color);
+                    if (sceneManager) {
+                        sceneManager.updateSkin(this.state.equippedSkin);
                     }
                 }, 100);
             }
@@ -562,6 +695,7 @@
                 this.ui.gems.innerText = this.state.gems.toLocaleString();
                 this.ui.stars.innerText = this.state.stars.toLocaleString();
                 this.ui.flasks.innerText = this.state.flasks.toLocaleString();
+                this.ui.orbs.innerText = this.state.orbs.toLocaleString();
                 this.ui.rebirth.innerText = this.state.rebirths;
                 this.ui.multiplier.innerText = this.getTotalMultiplier().toFixed(2);
                 this.ui.progress.innerText = `${this.state.currentProgress}/10`;
@@ -616,11 +750,11 @@
                 this.yogurtTop.position.y = 4;
                 this.yogurtGroup.add(this.yogurtTop);
 
-                // Black Line on Cap (Apex)
-                const lineGeo = new THREE.BoxGeometry(0.1, 0.05, 0.6); // Slit
+                // Black Line on Cap
+                const lineGeo = new THREE.BoxGeometry(0.1, 0.05, 0.6); 
                 const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
                 const line = new THREE.Mesh(lineGeo, blackMat);
-                line.position.set(0, 5.0, 0); // Apex (4 + 1 radius)
+                line.position.set(0, 5.0, 0); 
                 this.yogurtGroup.add(line);
 
                 const ballGeo = new THREE.SphereGeometry(1, 32, 32);
@@ -632,40 +766,36 @@
                 this.ballRight.position.set(1.3, 0.8, 0);
                 this.yogurtGroup.add(this.ballRight);
 
-                // --- Hand Model Construction (Wrapped) ---
+                // --- Hand Model Construction ---
                 this.handGroup = new THREE.Group();
                 const skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
 
-                // Palm (Box) behind
+                // Palm
                 const palmGeo = new THREE.BoxGeometry(1.6, 1.2, 0.4);
                 const palm = new THREE.Mesh(palmGeo, skinMat);
-                palm.position.set(0, 0, 1.4); // In front
+                palm.position.set(0, 0, 1.4); 
                 this.handGroup.add(palm);
 
-                // Fingers (Wrapped in arc)
+                // Fingers
                 const fingerGeo = new THREE.CapsuleGeometry(0.13, 0.8, 4, 8);
-                // Angles to wrap around cylinder
-                const fingerAngles = [-35, -15, 15, 35]; // Degrees
+                const fingerAngles = [-35, -15, 15, 35];
                 
                 for(let i=0; i<4; i++) {
                     const finger = new THREE.Mesh(fingerGeo, skinMat);
                     const ang = fingerAngles[i] * (Math.PI / 180);
-                    // Radius of wrap ~ 1.2
                     const r = 1.25;
                     const x = Math.sin(ang) * r;
                     const z = Math.cos(ang) * r;
-                    
                     finger.position.set(x, 0.8, z); 
-                    finger.rotation.x = -0.1; // Slight downward tilt
-                    // Rotate to face center + slight twist
+                    finger.rotation.x = -0.1;
                     finger.rotation.y = ang; 
                     this.handGroup.add(finger);
                 }
 
-                // Thumb (Side wrap)
+                // Thumb
                 const thumbGeo = new THREE.CapsuleGeometry(0.15, 0.7, 4, 8);
                 const thumb = new THREE.Mesh(thumbGeo, skinMat);
-                thumb.position.set(0.9, 0.2, 0.9); // Side-Front
+                thumb.position.set(0.9, 0.2, 0.9);
                 thumb.rotation.z = -0.6;
                 thumb.rotation.y = 0.8;
                 thumb.rotation.x = 0.3;
@@ -714,8 +844,26 @@
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
             }
 
-            updateSkin(colorHex) {
-                this.bodyMat.color.setHex(colorHex);
+            updateSkin(skinKey) {
+                const skin = SKINS_DATA[skinKey];
+                if (skin) {
+                    this.bodyMat.color.setHex(skin.color);
+                    
+                    // Reset standard material properties that might have been changed by special effects
+                    this.bodyMat.emissive.setHex(0x000000);
+                    this.bodyMat.metalness = 0.1;
+                    this.bodyMat.roughness = 0.3;
+                    this.bodyMat.wireframe = false;
+
+                    // Init basic material props for specific skins
+                    if (skinKey === 'amethyst' || skinKey === 'gold') {
+                        this.bodyMat.metalness = 0.8;
+                        this.bodyMat.roughness = 0.2;
+                    } else if (skinKey === 'ice') {
+                        this.bodyMat.metalness = 0.4;
+                        this.bodyMat.roughness = 0.1;
+                    }
+                }
             }
 
             triggerHandStroke() {
@@ -730,8 +878,6 @@
             }
 
             erupt(type) {
-                // Optimized: 500 (prev 120)
-                // Unoptimized: 100050 (prev 100k + 50)
                 const count = game.state.optimized ? 500 : 100050; 
                 const geoSegs = game.state.optimized ? 6 : 4; 
                 const geometry = new THREE.SphereGeometry(0.1, geoSegs, geoSegs);
@@ -769,8 +915,7 @@
             }
 
             resetModel() {
-                const currentSkin = SKINS_DATA[game.state.equippedSkin];
-                this.bodyMat.color.setHex(currentSkin ? currentSkin.color : 0xffffff);
+                this.updateSkin(game.state.equippedSkin);
                 this.yogurtGroup.rotation.set(0,0,0);
             }
 
@@ -779,7 +924,7 @@
                     this.handAnimation.phase += delta * 8; 
                     
                     const sineVal = Math.sin(this.handAnimation.phase);
-                    const norm = (sineVal + 1) / 2; // 0 to 1
+                    const norm = (sineVal + 1) / 2; 
                     this.handGroup.position.y = 1 + (norm * 2.5);
 
                     if (Date.now() - game.lastClickTime > 250) {
@@ -818,6 +963,7 @@
             animate() {
                 requestAnimationFrame(() => this.animate());
                 const delta = 0.016;
+                const time = Date.now() * 0.001;
 
                 this.controls.update();
                 this.updateParticles(delta);
@@ -831,14 +977,80 @@
                     this.ballRight.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 5);
                     
                     const heatRatio = Math.min(game.clickHeat / 250, 1);
-                    if (heatRatio > 0 && game.state.equippedSkin === 'default') {
-                        const baseColor = new THREE.Color(SKINS_DATA[game.state.equippedSkin].color);
+                    const currentSkin = game.state.equippedSkin;
+
+                    // Handle Heat Color Shift (Only if not using special animated skin)
+                    if (heatRatio > 0 && currentSkin === 'default') {
+                        const baseColor = new THREE.Color(SKINS_DATA['default'].color);
                         const redColor = new THREE.Color(0xff0000);
                         const finalColor = baseColor.clone().lerp(redColor, heatRatio);
                         this.bodyMat.color.copy(finalColor);
                     } else if (game.clickHeat <= 0) {
-                         const target = new THREE.Color(SKINS_DATA[game.state.equippedSkin].color);
-                         this.bodyMat.color.lerp(target, 0.1);
+                        // --- VISUAL EFFECTS FOR SKINS ---
+                        
+                        // 1. Mystic / Rainbow
+                        if (currentSkin === 'mystic') {
+                            const r = Math.sin(time) * 0.5 + 0.5;
+                            const g = Math.sin(time + 2) * 0.5 + 0.5;
+                            const b = Math.sin(time + 4) * 0.5 + 0.5;
+                            this.bodyMat.color.setRGB(r, g, b);
+                        } 
+                        
+                        // 2. Pulse Effects (Sapphire, Toxic, Sun)
+                        else if (currentSkin === 'sapphire') {
+                            const pulse = Math.sin(time * 2) * 0.2 + 0.8; // 0.6 to 1.0
+                            this.bodyMat.color.setHex(SKINS_DATA['sapphire'].color);
+                            this.bodyMat.emissive.setHex(0x0000cc);
+                            this.bodyMat.emissiveIntensity = pulse * 0.5;
+                        }
+                        else if (currentSkin === 'toxic') {
+                            const pulse = Math.abs(Math.sin(time * 8)); // Fast pulse
+                            this.bodyMat.emissive.setHex(0x33ff00);
+                            this.bodyMat.emissiveIntensity = pulse * 0.8;
+                        }
+                        else if (currentSkin === 'sun') {
+                            const pulse = Math.sin(time * 0.5) * 0.3 + 0.7; 
+                            this.bodyMat.emissive.setHex(0xff4500);
+                            this.bodyMat.emissiveIntensity = pulse;
+                        }
+
+                        // 3. Shifting Colors (Nebula, Magma)
+                        else if (currentSkin === 'nebula') {
+                             const r = Math.sin(time * 0.5) * 0.2 + 0.2; // 0.2 - 0.4
+                             const b = Math.cos(time * 0.5) * 0.2 + 0.6; // 0.4 - 0.8
+                             this.bodyMat.color.setRGB(r, 0, b);
+                        }
+                        else if (currentSkin === 'magma') {
+                             const r = 1.0;
+                             const g = Math.abs(Math.sin(time * 2)) * 0.4; 
+                             this.bodyMat.color.setRGB(r, g, 0);
+                             this.bodyMat.emissive.setHex(0xff0000);
+                             this.bodyMat.emissiveIntensity = 0.2 + Math.random() * 0.2; // Flicker
+                        }
+
+                        // 4. Glitch / Flicker (Plasma, Antimatter)
+                        else if (currentSkin === 'plasma') {
+                             if (Math.random() > 0.9) {
+                                 this.bodyMat.emissiveIntensity = 2.0;
+                             } else {
+                                 this.bodyMat.emissiveIntensity = 0.5;
+                             }
+                             this.bodyMat.emissive.setHex(0xff00ff);
+                        }
+                        else if (currentSkin === 'antimatter') {
+                            this.bodyMat.wireframe = Math.sin(time * 5) > 0;
+                            if (Math.random() > 0.8) {
+                                this.bodyMat.color.setHex(0xffffff);
+                            } else {
+                                this.bodyMat.color.setHex(0x000000);
+                            }
+                        }
+
+                        // Default lerp for static skins to recover from heat or init
+                        else {
+                            const target = new THREE.Color(SKINS_DATA[currentSkin].color);
+                            this.bodyMat.color.lerp(target, 0.1);
+                        }
                     }
                 } else {
                     this.yogurtGroup.rotation.x = (Math.random() - 0.5) * 0.2;
