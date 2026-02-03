@@ -83,16 +83,6 @@
         <p class="mt-4 text-gray-400 text-sm">Загрузка ресурсов...</p>
     </div>
 
-    <!-- Red Screen Overlay for Explosion -->
-    <div id="red-overlay" class="fixed inset-0 z-40 pointer-events-none opacity-0 bg-red-600 mix-blend-multiply transition-opacity duration-300"></div>
-    <div id="explosion-msg" class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300">
-        <div class="bg-black/90 p-6 rounded-xl border-2 border-red-500 text-center transform scale-125">
-            <h2 class="text-3xl text-red-500 font-bold mb-2">ВЗРЫВ!</h2>
-            <p class="text-white">Обнаружен автокликер!</p>
-            <p class="text-red-400 text-sm mt-2">-50% Денег</p>
-        </div>
-    </div>
-
     <!-- Chat Modal -->
     <div id="chat-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 pointer-events-auto">
         <div class="bg-gray-900 rounded-xl w-full max-w-4xl h-[80vh] flex flex-col border border-pink-500/30 overflow-hidden relative" id="chat-content">
@@ -231,7 +221,7 @@
             </div>
             
             <div class="text-center mt-8">
-                <p class="text-xs text-gray-600">peni game S v3.6</p>
+                <p class="text-xs text-gray-600">peni game S v3.7</p>
             </div>
         </div>
     </div>
@@ -284,7 +274,7 @@
             'void': { name: 'Пустота', cost: 500, currency: 'flask', mult: 100.0, color: 0x000000 },
             
             // Orb Skins
-            'mystic': { name: 'Мистик', cost: 1, currency: 'orb', mult: 500.0, color: 0x9932cc }
+            'mystic': { name: 'Мистик', cost: 500, currency: 'orb', mult: 500.0, color: 0x9932cc }
         };
 
         const CURRENCY_MAP = {
@@ -315,10 +305,6 @@
                     redeemedCodes: []
                 };
                 
-                this.clickHeat = 0;
-                this.isExploded = false;
-                this.lastClickTime = 0;
-                
                 this.load();
                 this.startBackgroundRotation();
                 
@@ -340,8 +326,6 @@
                     closeMenu: document.getElementById('close-menu'),
                     rebirthCost: document.getElementById('rebirth-cost'),
                     rebirthMultVal: document.getElementById('rebirth-mult-val'),
-                    redOverlay: document.getElementById('red-overlay'),
-                    explosionMsg: document.getElementById('explosion-msg'),
                     skinsList: document.getElementById('skins-list'),
                     chatBtn: document.getElementById('chat-btn'),
                     chatModal: document.getElementById('chat-modal'),
@@ -409,21 +393,6 @@
             }
 
             click() {
-                if (this.isExploded) return;
-
-                const now = Date.now();
-                const timeDiff = now - this.lastClickTime;
-                this.lastClickTime = now;
-
-                if (timeDiff < 80) this.clickHeat += 5;
-                else if (timeDiff < 150) this.clickHeat += 1;
-                else this.clickHeat = Math.max(0, this.clickHeat - 5);
-
-                if (this.clickHeat > 249) {
-                    this.triggerExplosion();
-                    return;
-                }
-
                 this.state.currentProgress++;
                 sceneManager.triggerHandStroke();
                 
@@ -456,28 +425,6 @@
             payout(baseReward) {
                 const amount = baseReward * this.getTotalMultiplier();
                 this.state.money += Math.floor(amount);
-            }
-
-            triggerExplosion() {
-                if (this.isExploded) return;
-                this.isExploded = true;
-                
-                this.ui.redOverlay.classList.remove('opacity-0');
-                this.ui.explosionMsg.classList.remove('opacity-0');
-                
-                this.state.money = Math.floor(this.state.money * 0.5);
-                this.updateUI();
-                this.save();
-
-                sceneManager.explodeModel();
-
-                setTimeout(() => {
-                    this.isExploded = false;
-                    this.clickHeat = 0;
-                    this.ui.redOverlay.classList.add('opacity-0');
-                    this.ui.explosionMsg.classList.add('opacity-0');
-                    sceneManager.resetModel();
-                }, 5000);
             }
 
             exchange(type) {
@@ -894,11 +841,14 @@
                 for (let i = 0; i < count; i++) {
                     const material = materials[Math.floor(Math.random() * materials.length)];
                     const mesh = new THREE.Mesh(geometry, material);
+                    
+                    // Spawn from black slit
                     mesh.position.set(
-                        (Math.random() - 0.5) * 0.5,
-                        4.2, 
-                        (Math.random() - 0.5) * 0.5
+                        (Math.random() - 0.5) * 0.1, // Width of slit
+                        5.0,                         // Height of slit
+                        (Math.random() - 0.5) * 0.6  // Length of slit
                     );
+
                     const velocity = new THREE.Vector3(
                         (Math.random() - 0.5) * 3, 
                         Math.random() * 5 + 3, 
@@ -927,12 +877,10 @@
                     const norm = (sineVal + 1) / 2; 
                     this.handGroup.position.y = 1 + (norm * 2.5);
 
-                    if (Date.now() - game.lastClickTime > 250) {
-                        if (sineVal < -0.9) {
-                            this.handAnimation.active = false;
-                            this.handGroup.position.y = 1; 
-                            this.handAnimation.phase = -Math.PI/2;
-                        }
+                    if (this.handAnimation.phase > Math.PI * 1.5) {
+                         this.handAnimation.active = false;
+                         this.handGroup.position.y = 1; 
+                         this.handAnimation.phase = -Math.PI/2;
                     }
                 }
             }
@@ -969,92 +917,78 @@
                 this.updateParticles(delta);
                 this.updateHand(delta);
 
-                if (!game.isExploded) {
-                    let targetScale = 0.5 + (game.state.currentProgress / 9) * 1.0;
-                    if (game.state.currentProgress === 0) targetScale = 0.5;
+                let targetScale = 0.5 + (game.state.currentProgress / 9) * 1.0;
+                if (game.state.currentProgress === 0) targetScale = 0.5;
 
-                    this.ballLeft.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 5);
-                    this.ballRight.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 5);
-                    
-                    const heatRatio = Math.min(game.clickHeat / 250, 1);
-                    const currentSkin = game.state.equippedSkin;
+                this.ballLeft.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 5);
+                this.ballRight.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 5);
+                
+                const currentSkin = game.state.equippedSkin;
 
-                    // Handle Heat Color Shift (Only if not using special animated skin)
-                    if (heatRatio > 0 && currentSkin === 'default') {
-                        const baseColor = new THREE.Color(SKINS_DATA['default'].color);
-                        const redColor = new THREE.Color(0xff0000);
-                        const finalColor = baseColor.clone().lerp(redColor, heatRatio);
-                        this.bodyMat.color.copy(finalColor);
-                    } else if (game.clickHeat <= 0) {
-                        // --- VISUAL EFFECTS FOR SKINS ---
-                        
-                        // 1. Mystic / Rainbow
-                        if (currentSkin === 'mystic') {
-                            const r = Math.sin(time) * 0.5 + 0.5;
-                            const g = Math.sin(time + 2) * 0.5 + 0.5;
-                            const b = Math.sin(time + 4) * 0.5 + 0.5;
-                            this.bodyMat.color.setRGB(r, g, b);
-                        } 
-                        
-                        // 2. Pulse Effects (Sapphire, Toxic, Sun)
-                        else if (currentSkin === 'sapphire') {
-                            const pulse = Math.sin(time * 2) * 0.2 + 0.8; // 0.6 to 1.0
-                            this.bodyMat.color.setHex(SKINS_DATA['sapphire'].color);
-                            this.bodyMat.emissive.setHex(0x0000cc);
-                            this.bodyMat.emissiveIntensity = pulse * 0.5;
-                        }
-                        else if (currentSkin === 'toxic') {
-                            const pulse = Math.abs(Math.sin(time * 8)); // Fast pulse
-                            this.bodyMat.emissive.setHex(0x33ff00);
-                            this.bodyMat.emissiveIntensity = pulse * 0.8;
-                        }
-                        else if (currentSkin === 'sun') {
-                            const pulse = Math.sin(time * 0.5) * 0.3 + 0.7; 
-                            this.bodyMat.emissive.setHex(0xff4500);
-                            this.bodyMat.emissiveIntensity = pulse;
-                        }
+                // --- VISUAL EFFECTS FOR SKINS ---
+                
+                // 1. Mystic / Rainbow
+                if (currentSkin === 'mystic') {
+                    const r = Math.sin(time) * 0.5 + 0.5;
+                    const g = Math.sin(time + 2) * 0.5 + 0.5;
+                    const b = Math.sin(time + 4) * 0.5 + 0.5;
+                    this.bodyMat.color.setRGB(r, g, b);
+                } 
+                
+                // 2. Pulse Effects (Sapphire, Toxic, Sun)
+                else if (currentSkin === 'sapphire') {
+                    const pulse = Math.sin(time * 2) * 0.2 + 0.8; // 0.6 to 1.0
+                    this.bodyMat.color.setHex(SKINS_DATA['sapphire'].color);
+                    this.bodyMat.emissive.setHex(0x0000cc);
+                    this.bodyMat.emissiveIntensity = pulse * 0.5;
+                }
+                else if (currentSkin === 'toxic') {
+                    const pulse = Math.abs(Math.sin(time * 8)); // Fast pulse
+                    this.bodyMat.emissive.setHex(0x33ff00);
+                    this.bodyMat.emissiveIntensity = pulse * 0.8;
+                }
+                else if (currentSkin === 'sun') {
+                    const pulse = Math.sin(time * 0.5) * 0.3 + 0.7; 
+                    this.bodyMat.emissive.setHex(0xff4500);
+                    this.bodyMat.emissiveIntensity = pulse;
+                }
 
-                        // 3. Shifting Colors (Nebula, Magma)
-                        else if (currentSkin === 'nebula') {
-                             const r = Math.sin(time * 0.5) * 0.2 + 0.2; // 0.2 - 0.4
-                             const b = Math.cos(time * 0.5) * 0.2 + 0.6; // 0.4 - 0.8
-                             this.bodyMat.color.setRGB(r, 0, b);
-                        }
-                        else if (currentSkin === 'magma') {
-                             const r = 1.0;
-                             const g = Math.abs(Math.sin(time * 2)) * 0.4; 
-                             this.bodyMat.color.setRGB(r, g, 0);
-                             this.bodyMat.emissive.setHex(0xff0000);
-                             this.bodyMat.emissiveIntensity = 0.2 + Math.random() * 0.2; // Flicker
-                        }
+                // 3. Shifting Colors (Nebula, Magma)
+                else if (currentSkin === 'nebula') {
+                     const r = Math.sin(time * 0.5) * 0.2 + 0.2; // 0.2 - 0.4
+                     const b = Math.cos(time * 0.5) * 0.2 + 0.6; // 0.4 - 0.8
+                     this.bodyMat.color.setRGB(r, 0, b);
+                }
+                else if (currentSkin === 'magma') {
+                     const r = 1.0;
+                     const g = Math.abs(Math.sin(time * 2)) * 0.4; 
+                     this.bodyMat.color.setRGB(r, g, 0);
+                     this.bodyMat.emissive.setHex(0xff0000);
+                     this.bodyMat.emissiveIntensity = 0.2 + Math.random() * 0.2; // Flicker
+                }
 
-                        // 4. Glitch / Flicker (Plasma, Antimatter)
-                        else if (currentSkin === 'plasma') {
-                             if (Math.random() > 0.9) {
-                                 this.bodyMat.emissiveIntensity = 2.0;
-                             } else {
-                                 this.bodyMat.emissiveIntensity = 0.5;
-                             }
-                             this.bodyMat.emissive.setHex(0xff00ff);
-                        }
-                        else if (currentSkin === 'antimatter') {
-                            this.bodyMat.wireframe = Math.sin(time * 5) > 0;
-                            if (Math.random() > 0.8) {
-                                this.bodyMat.color.setHex(0xffffff);
-                            } else {
-                                this.bodyMat.color.setHex(0x000000);
-                            }
-                        }
-
-                        // Default lerp for static skins to recover from heat or init
-                        else {
-                            const target = new THREE.Color(SKINS_DATA[currentSkin].color);
-                            this.bodyMat.color.lerp(target, 0.1);
-                        }
+                // 4. Glitch / Flicker (Plasma, Antimatter)
+                else if (currentSkin === 'plasma') {
+                     if (Math.random() > 0.9) {
+                         this.bodyMat.emissiveIntensity = 2.0;
+                     } else {
+                         this.bodyMat.emissiveIntensity = 0.5;
+                     }
+                     this.bodyMat.emissive.setHex(0xff00ff);
+                }
+                else if (currentSkin === 'antimatter') {
+                    this.bodyMat.wireframe = Math.sin(time * 5) > 0;
+                    if (Math.random() > 0.8) {
+                        this.bodyMat.color.setHex(0xffffff);
+                    } else {
+                        this.bodyMat.color.setHex(0x000000);
                     }
-                } else {
-                    this.yogurtGroup.rotation.x = (Math.random() - 0.5) * 0.2;
-                    this.yogurtGroup.rotation.z = (Math.random() - 0.5) * 0.2;
+                }
+
+                // Default lerp for static skins to recover from init
+                else {
+                    const target = new THREE.Color(SKINS_DATA[currentSkin].color);
+                    this.bodyMat.color.lerp(target, 0.1);
                 }
 
                 this.renderer.render(this.scene, this.camera);
