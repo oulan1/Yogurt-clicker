@@ -9,21 +9,20 @@
         body { 
             margin: 0; 
             overflow: hidden; 
-            background-color: #1a1a1a; 
+            background-color: #000; /* Black background for loading and edge cases */
             touch-action: none; 
             user-select: none; 
             -webkit-user-select: none;
             
-            /* Background Fixes */
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            /* Background Physics */
+            background-position: center center;
+            background-repeat: repeat-x; 
+            /* Initial size, updated by JS */
+            background-size: auto 120%; 
             height: 100vh;
             width: 100vw;
             
-            /* Smooth background transition */
-            transition: background-image 1s ease-in-out;
+            transition: background-image 0.5s ease-in-out;
         }
         #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
@@ -61,6 +60,11 @@
             visibility: hidden;
             pointer-events: none;
         }
+
+        /* Tab Styles */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active { background-color: #db2777; color: white; border-color: #fce7f3; }
     </style>
     <!-- Three.js CDN -->
     <script type="importmap">
@@ -76,7 +80,7 @@
 
     <!-- Loading Screen -->
     <div id="loading-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-black text-white flex-col transition-opacity duration-1000">
-        <h1 class="text-4xl font-bold mb-4 animate-float" style="color: #ffcccb;">PENI GAME S</h1>
+        <img src="https://ltdfoto.ru/images/2026/02/04/28403.png" alt="Logo" class="w-64 mb-6 animate-float object-contain">
         <div class="w-64 h-2 bg-gray-800 rounded-full overflow-hidden">
             <div id="loading-bar" class="h-full bg-pink-500 w-0 transition-all duration-[2000ms] ease-out"></div>
         </div>
@@ -146,83 +150,96 @@
 
     <!-- Side Menu -->
     <div id="side-menu" class="fixed top-0 left-0 h-full w-80 bg-gray-900/95 backdrop-blur-md transform -translate-x-full transition-transform duration-300 z-30 border-r border-gray-700 flex flex-col pointer-events-auto shadow-2xl">
-        <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-700 flex justify-between items-center shrink-0">
             <h2 class="text-xl font-bold text-pink-500">Меню</h2>
             <button id="close-menu" class="text-gray-400 hover:text-white">&times;</button>
         </div>
         
-        <div class="flex-1 overflow-y-auto p-4 space-y-4">
-            
-            <!-- Promo Code Section -->
-            <div class="bg-gray-800 p-3 rounded-lg border border-yellow-500/30">
-                <h3 class="text-lg font-bold text-yellow-400 mb-2">🎁 Промокод</h3>
+        <!-- Promo Code (Always Visible) -->
+        <div class="p-4 border-b border-gray-700 shrink-0">
+            <div class="bg-gray-800 p-2 rounded-lg border border-yellow-500/30">
+                <h3 class="text-xs font-bold text-yellow-400 mb-1">🎁 Промокод</h3>
                 <div class="flex gap-2">
-                    <input id="promo-input" type="text" placeholder="Введите код" class="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-pink-500 uppercase">
+                    <input id="promo-input" type="text" placeholder="Код" class="w-full bg-gray-900 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-pink-500 uppercase">
                     <button onclick="game.redeemCode()" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm font-bold">OK</button>
                 </div>
             </div>
+        </div>
 
-            <!-- Exchange Section -->
-            <div class="bg-gray-800 p-3 rounded-lg">
-                <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">🛒 Обменник</h3>
-                <button onclick="game.exchange('gem')" class="w-full mb-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm flex justify-between px-2">
-                    <span>Купить 1 💎</span>
-                    <span class="text-blue-200">10k 💰</span>
+        <!-- Tabs Navigation -->
+        <div class="grid grid-cols-2 gap-2 p-2 shrink-0">
+            <button onclick="game.switchTab('exchange')" id="btn-exchange" class="tab-btn active bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-2 rounded border border-transparent transition-colors">🛒 Обмен</button>
+            <button onclick="game.switchTab('skins')" id="btn-skins" class="tab-btn bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-2 rounded border border-transparent transition-colors">👕 Скины</button>
+            <button onclick="game.switchTab('faces')" id="btn-faces" class="tab-btn bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-2 rounded border border-transparent transition-colors">👤 Лица</button>
+            <button onclick="game.switchTab('settings')" id="btn-settings" class="tab-btn bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-2 rounded border border-transparent transition-colors">⚙️ Инфо</button>
+        </div>
+        
+        <!-- Tab Contents (Scrollable) -->
+        <div class="flex-1 overflow-y-auto p-4 relative">
+            
+            <!-- Exchange Tab -->
+            <div id="tab-exchange" class="tab-content active space-y-2">
+                <button onclick="game.exchange('gem')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center">
+                    <span>1 💎</span> <span class="text-blue-200 font-mono">10k 💰</span>
                 </button>
-                <button onclick="game.exchange('star')" class="w-full mb-2 bg-yellow-600 hover:bg-yellow-700 text-white py-2 rounded text-sm flex justify-between px-2">
-                    <span>Купить 1 ⭐</span>
-                    <span class="text-yellow-200">100 💎</span>
+                <button onclick="game.exchange('star')" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center">
+                    <span>1 ⭐</span> <span class="text-yellow-200 font-mono">100 💎</span>
                 </button>
-                <button onclick="game.exchange('flask')" class="w-full mb-2 bg-green-600 hover:bg-green-700 text-white py-2 rounded text-sm flex justify-between px-2">
-                    <span>Купить 1 🧪</span>
-                    <span class="text-green-200">10 ⭐</span>
+                <button onclick="game.exchange('flask')" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center">
+                    <span>1 🧪</span> <span class="text-green-200 font-mono">10 ⭐</span>
                 </button>
-                <button onclick="game.exchange('orb')" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded text-sm flex justify-between px-2">
-                    <span>Купить 1 🔮</span>
-                    <span class="text-purple-200">10 🧪</span>
+                <button onclick="game.exchange('orb')" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center">
+                    <span>1 🔮</span> <span class="text-purple-200 font-mono">10 🧪</span>
                 </button>
             </div>
 
-            <!-- Skins Section -->
-            <div class="bg-gray-800 p-3 rounded-lg border border-pink-500/20">
-                <h3 class="text-lg font-bold text-pink-300 mb-2">👕 Скины</h3>
-                <div id="skins-list" class="space-y-2 max-h-64 overflow-y-auto pr-1">
-                    <!-- Populated by JS -->
-                </div>
+            <!-- Skins Tab -->
+            <div id="tab-skins" class="tab-content space-y-2">
+                <div id="skins-list" class="space-y-2"></div>
             </div>
 
-            <!-- Rebirth Section -->
-            <div class="bg-gray-800 p-3 rounded-lg border border-purple-500/30">
-                <h3 class="text-lg font-bold text-purple-400 mb-2 flex items-center gap-2">🌀 Перерождение</h3>
-                <p class="text-xs text-gray-400 mb-2">Сброс прогресса ради множителя дохода.</p>
-                <div class="text-sm text-gray-300 mb-2">
-                    Текущий множитель: <span class="text-green-400 font-bold" id="rebirth-mult-val">x1.00</span>
-                </div>
-                <button onclick="game.doRebirth()" id="rebirth-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded font-bold shadow-lg flex flex-col items-center justify-center gap-1">
-                    <span>ПЕРЕРОДИТЬСЯ</span>
-                    <span class="text-xs opacity-80" id="rebirth-cost">Цена: 100 💰</span>
-                </button>
+            <!-- Faces Tab -->
+            <div id="tab-faces" class="tab-content space-y-2">
+                <div id="faces-list" class="space-y-2"></div>
             </div>
 
-            <!-- Settings -->
-            <div class="bg-gray-800 p-3 rounded-lg">
-                <h3 class="text-lg font-bold text-white mb-2">⚙️ Настройки</h3>
-                
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-gray-300 text-sm">Оптимизация</span>
-                    <button id="opt-toggle" onclick="game.toggleOptimization()" class="w-12 h-6 bg-red-500 rounded-full relative transition-colors">
-                        <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div>
+            <!-- Settings Tab -->
+            <div id="tab-settings" class="tab-content space-y-4">
+                <div class="bg-gray-800 p-3 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-gray-300 text-sm">Оптимизация</span>
+                        <button id="opt-toggle" onclick="game.toggleOptimization()" class="w-12 h-6 bg-red-500 rounded-full relative transition-colors">
+                            <div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-500 leading-tight mb-4">
+                        Включает лимит частиц для повышения FPS.
+                    </p>
+
+                    <hr class="border-gray-600 my-4">
+
+                    <button onclick="game.resetProgress()" class="w-full bg-red-600/20 border border-red-500 text-red-400 hover:bg-red-600 hover:text-white py-2 rounded text-sm transition-colors font-bold">
+                        ⚠️ Сбросить прогресс
                     </button>
                 </div>
-                <p class="text-[10px] text-gray-500 leading-tight">
-                    Выкл: 100К частиц, ЖЕСТКИЙ ЛАГ.<br>
-                    Вкл: ~500 частиц, плавно.
-                </p>
+                <div class="text-center">
+                    <p class="text-xs text-gray-600">peni game S v3.16</p>
+                </div>
             </div>
-            
-            <div class="text-center mt-8">
-                <p class="text-xs text-gray-600">peni game S v3.7</p>
-            </div>
+
+        </div>
+
+        <!-- Rebirth Section (Fixed Bottom) -->
+        <div class="p-4 border-t border-gray-700 bg-gray-800/50 shrink-0">
+            <h3 class="text-sm font-bold text-purple-400 mb-1 flex justify-between">
+                <span>🌀 Перерождение</span>
+                <span class="text-green-400" id="rebirth-mult-val">x1.00</span>
+            </h3>
+            <button onclick="game.doRebirth()" id="rebirth-btn" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-bold shadow-lg flex items-center justify-center gap-2 text-sm">
+                <span>СБРОС</span>
+                <span class="text-xs opacity-80 bg-black/30 px-2 py-0.5 rounded" id="rebirth-cost">100 💰</span>
+            </button>
         </div>
     </div>
 
@@ -243,10 +260,18 @@
             'https://ltdfoto.ru/images/2026/02/03/25570.jpg',
             'https://ltdfoto.ru/images/2026/02/03/25514.jpg',
             'https://ltdfoto.ru/images/2026/02/03/25291.jpg',
-            'https://ltdfoto.ru/images/2026/02/03/25095.jpg'
+            'https://ltdfoto.ru/images/2026/02/03/25095.jpg',
+            // Existing additional backgrounds
+            'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=2072&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop',
+            // New Requested Backgrounds
+            'https://ltdfoto.ru/images/2026/02/04/28404.jpg',
+            'https://ltdfoto.ru/images/2026/02/04/28405.jpg',
+            'https://ltdfoto.ru/images/2026/02/04/28406.jpg',
+            'https://ltdfoto.ru/images/2026/02/04/28407.jpg'
         ];
 
-        // Updated Skins with new values and new additions
         const SKINS_DATA = {
             'default': { name: 'Обычный', cost: 0, currency: 'money', mult: 1.0, color: 0xffffff },
             'pinky': { name: 'Pinky', cost: 1000, currency: 'money', mult: 1.1, color: 0xff69b4 },
@@ -256,25 +281,35 @@
             // Gem Skins
             'sapphire': { name: 'Сапфир', cost: 5, currency: 'gem', mult: 2.0, color: 0x0f52ba },
             'emerald': { name: 'Изумруд', cost: 10, currency: 'gem', mult: 3.0, color: 0x50c878 },
-            'gold': { name: 'Gold', cost: 50, currency: 'gem', mult: 4.0, color: 0xffd700 },
+            // Rebalanced Multipliers (Integer only, halved)
+            'diamond': { name: 'Алмаз', cost: 25, currency: 'gem', mult: 7, color: 0xb9f2ff }, 
+            'gold': { name: 'Gold', cost: 50, currency: 'gem', mult: 10, color: 0xffd700 }, 
             
             // Star Skins
-            'amethyst': { name: 'Аметист', cost: 1, currency: 'star', mult: 6.0, color: 0x9966cc },
-            'nebula': { name: 'Туманность', cost: 5, currency: 'star', mult: 8.0, color: 0x4b0082 },
-            'sun': { name: 'Солнце', cost: 10, currency: 'star', mult: 9.5, color: 0xffa500 },
-            'ruby': { name: 'Рубин', cost: 25, currency: 'star', mult: 10.0, color: 0xe0115f },
+            'amethyst': { name: 'Аметист', cost: 1, currency: 'star', mult: 12, color: 0x9966cc }, 
+            'nebula': { name: 'Туманность', cost: 5, currency: 'star', mult: 20, color: 0x4b0082 },
+            'sun': { name: 'Солнце', cost: 10, currency: 'star', mult: 30, color: 0xffa500 },
+            'ruby': { name: 'Рубин', cost: 25, currency: 'star', mult: 40, color: 0xe0115f },
             
             // Flask Skins
-            'toxic': { name: 'Токсик', cost: 5, currency: 'flask', mult: 15.0, color: 0x76ff03 },
-            'nuclear': { name: 'Ядерный', cost: 10, currency: 'flask', mult: 25.0, color: 0x39ff14 },
-            'plasma': { name: 'Плазма', cost: 25, currency: 'flask', mult: 35.0, color: 0xdc143c },
-            'magma': { name: 'Магма', cost: 50, currency: 'flask', mult: 50.0, color: 0xff4500 },
-            'ice': { name: 'Абсолютный ноль', cost: 100, currency: 'flask', mult: 75.0, color: 0xa5f2f3 },
-            'antimatter': { name: 'Антиматерия', cost: 250, currency: 'flask', mult: 90.0, color: 0x111111 },
-            'void': { name: 'Пустота', cost: 500, currency: 'flask', mult: 100.0, color: 0x000000 },
+            'toxic': { name: 'Токсик', cost: 5, currency: 'flask', mult: 50, color: 0x76ff03 },
+            'nuclear': { name: 'Ядерный', cost: 10, currency: 'flask', mult: 100, color: 0x39ff14 },
+            'plasma': { name: 'Плазма', cost: 25, currency: 'flask', mult: 150, color: 0xdc143c },
+            'magma': { name: 'Магма', cost: 50, currency: 'flask', mult: 200, color: 0xff4500 },
+            'ice': { name: 'Абсолютный ноль', cost: 100, currency: 'flask', mult: 300, color: 0xa5f2f3 },
+            'antimatter': { name: 'Антиматерия', cost: 250, currency: 'flask', mult: 400, color: 0x111111 },
+            'void': { name: 'Пустота', cost: 500, currency: 'flask', mult: 500, color: 0x000000 },
             
             // Orb Skins
-            'mystic': { name: 'Мистик', cost: 500, currency: 'orb', mult: 500.0, color: 0x9932cc }
+            'mystic': { name: 'Мистик', cost: 500, currency: 'orb', mult: 2500, color: 0x9932cc }
+        };
+
+        const FACES_DATA = {
+            'boy': { name: 'Мальчик', cost: 25000, currency: 'money', mult: 1.2, hairColor: 0x3d2314, isBoy: true },
+            'girl1': { name: 'Девушка', cost: 25, currency: 'gem', mult: 2.5, hairColor: 0xffd700, isBoy: false, bustScale: 0.5, clothingColor: 0x4287f5 }, // Blonde, Small
+            'girl2': { name: 'Красотка', cost: 25, currency: 'star', mult: 10.0, hairColor: 0x5e2c04, isBoy: false, bustScale: 0.8, clothingColor: 0xff3366 }, // Brunette, Medium
+            'girl3': { name: 'Модель', cost: 25, currency: 'flask', mult: 50.0, hairColor: 0xff3333, isBoy: false, bustScale: 1.1, clothingColor: 0x33ff33 }, // Redhead, Large
+            'girl4': { name: 'Супермодель', cost: 25, currency: 'orb', mult: 250.0, hairColor: 0xeeeeee, isBoy: false, bustScale: 1.4, clothingColor: 0xffffff } // Platinum, XL
         };
 
         const CURRENCY_MAP = {
@@ -301,6 +336,8 @@
                     currentProgress: 0,
                     unlockedSkins: ['default'],
                     equippedSkin: 'default',
+                    unlockedFaces: [],
+                    equippedFace: null,
                     optimized: true, 
                     redeemedCodes: []
                 };
@@ -327,14 +364,29 @@
                     rebirthCost: document.getElementById('rebirth-cost'),
                     rebirthMultVal: document.getElementById('rebirth-mult-val'),
                     skinsList: document.getElementById('skins-list'),
+                    facesList: document.getElementById('faces-list'),
                     chatBtn: document.getElementById('chat-btn'),
                     chatModal: document.getElementById('chat-modal'),
                     closeChat: document.getElementById('close-chat'),
-                    promoInput: document.getElementById('promo-input')
+                    promoInput: document.getElementById('promo-input'),
+                    // Tabs
+                    tabs: {
+                        exchange: document.getElementById('tab-exchange'),
+                        skins: document.getElementById('tab-skins'),
+                        faces: document.getElementById('tab-faces'),
+                        settings: document.getElementById('tab-settings')
+                    },
+                    btns: {
+                        exchange: document.getElementById('btn-exchange'),
+                        skins: document.getElementById('btn-skins'),
+                        faces: document.getElementById('btn-faces'),
+                        settings: document.getElementById('btn-settings')
+                    }
                 };
 
                 this.initUI();
                 this.renderSkinsList();
+                this.renderFacesList();
             }
 
             save() {
@@ -366,6 +418,7 @@
                         this.state.currentProgress = Number(this.state.currentProgress) || 0;
                         if (typeof this.state.optimized === 'undefined') this.state.optimized = true;
                         if (!this.state.redeemedCodes) this.state.redeemedCodes = [];
+                        if (!this.state.unlockedFaces) this.state.unlockedFaces = [];
                         
                         if(this.state.currentProgress >= 10) this.state.currentProgress = 0;
                     } catch (e) {
@@ -373,9 +426,29 @@
                     }
                 }
             }
+            
+            resetProgress() {
+                if (confirm("Вы уверены что хотите сбросить ВЕСЬ прогресс? Это действие нельзя отменить.")) {
+                    if (confirm("Точно? Все монеты, скины и лица пропадут.")) {
+                        localStorage.removeItem(SAVE_KEY);
+                        LEGACY_KEYS.forEach(k => localStorage.removeItem(k));
+                        location.reload();
+                    }
+                }
+            }
+
+            switchTab(tabName) {
+                // Hide all
+                Object.values(this.ui.tabs).forEach(el => el.classList.remove('active'));
+                Object.values(this.ui.btns).forEach(el => el.classList.remove('active'));
+                
+                // Show selected
+                if(this.ui.tabs[tabName]) this.ui.tabs[tabName].classList.add('active');
+                if(this.ui.btns[tabName]) this.ui.btns[tabName].classList.add('active');
+            }
 
             getRebirthMultiplier() {
-                return 1 + (this.state.rebirths * 0.05);
+                return 1 + (this.state.rebirths * 0.05); // x1.05 as requested
             }
 
             getSkinMultiplier() {
@@ -383,13 +456,26 @@
                 return skin ? skin.mult : 1.0;
             }
 
+            getFaceMultiplier() {
+                if (!this.state.equippedFace) return 1.0;
+                const face = FACES_DATA[this.state.equippedFace];
+                return face ? face.mult : 1.0;
+            }
+
             getTotalMultiplier() {
-                return this.getRebirthMultiplier() * this.getSkinMultiplier();
+                return this.getRebirthMultiplier() * this.getSkinMultiplier() * this.getFaceMultiplier();
             }
 
             getRebirthCost() {
-                let cost = 100 * Math.pow(1.25, this.state.rebirths);
-                return Math.floor(cost);
+                let cost = 100;
+                for(let i = 0; i < this.state.rebirths; i++) {
+                    if (cost >= 100000) {
+                        cost = Math.floor(cost * 1.05);
+                    } else {
+                        cost = Math.floor(cost * 1.25);
+                    }
+                }
+                return cost;
             }
 
             click() {
@@ -401,19 +487,27 @@
                     
                     const luck = Math.random();
                     let type = 'white';
-                    let baseReward = 12;
+                    let baseReward = 50;
 
-                    if (luck > 0.95) { // 5% Rainbow
+                    if (luck < 0.01) { // 1% Nuclear
+                         type = 'nuclear';
+                         baseReward = 1500;
+                    } else if (luck < 0.05) { // 4% Rainbow
                         type = 'rainbow';
-                        baseReward = 500;
-                    } else if (luck > 0.80) { // 15% Yellow
+                        baseReward = 750;
+                    } else if (luck < 0.15) { // 10% Yellow
                         type = 'yellow';
-                        baseReward = 50;
+                        baseReward = 150;
                     }
 
                     this.payout(baseReward);
                     sceneManager.erupt(type);
                     sceneManager.pulseBalls(true);
+                    
+                    if (this.state.equippedFace) {
+                        sceneManager.triggerFaceEat();
+                    }
+
                 } else {
                     sceneManager.pulseBalls(false);
                 }
@@ -468,6 +562,23 @@
                     alert("Промокод активирован! Вы получили 10,000 💰");
                     this.updateUI();
                     this.save();
+                } else if (code === "ЛИЦО") {
+                    this.state.gems += 10;
+                    this.state.redeemedCodes.push(code);
+                    alert("Промокод активирован! Вы получили 10 💎");
+                    this.updateUI();
+                    this.save();
+                } else if (code === "АДМИН") {
+                    const amount = 999000000000;
+                    this.state.money += amount;
+                    this.state.gems += amount;
+                    this.state.stars += amount;
+                    this.state.flasks += amount;
+                    this.state.orbs += amount;
+                    this.state.redeemedCodes.push(code);
+                    alert("ADMIN CODE ACTIVATED: +999B ALL CURRENCIES");
+                    this.updateUI();
+                    this.save();
                 } else {
                     alert("Неверный промокод");
                 }
@@ -513,6 +624,30 @@
                 }
             }
 
+            buyFace(key) {
+                const face = FACES_DATA[key];
+                const currencyInfo = CURRENCY_MAP[face.currency];
+                const userAmount = this.state[currencyInfo.prop];
+                
+                if (userAmount >= face.cost && !this.state.unlockedFaces.includes(key)) {
+                    this.state[currencyInfo.prop] -= face.cost;
+                    this.state.unlockedFaces.push(key);
+                    this.renderFacesList();
+                    this.updateUI();
+                    this.save();
+                }
+            }
+
+            equipFace(key) {
+                if (this.state.unlockedFaces.includes(key)) {
+                    this.state.equippedFace = key;
+                    sceneManager.updateFace(key);
+                    this.renderFacesList();
+                    this.updateUI();
+                    this.save();
+                }
+            }
+
             renderSkinsList() {
                 const list = this.ui.skinsList;
                 list.innerHTML = '';
@@ -540,6 +675,40 @@
                         <div>
                             <div class="text-sm font-bold text-white">${skin.name}</div>
                             <div class="text-[10px] text-gray-400">Бонус: x${skin.mult}</div>
+                        </div>
+                        ${actionBtn}
+                    `;
+                    list.appendChild(div);
+                });
+            }
+
+            renderFacesList() {
+                const list = this.ui.facesList;
+                list.innerHTML = '';
+                
+                Object.keys(FACES_DATA).forEach(key => {
+                    const face = FACES_DATA[key];
+                    const isUnlocked = this.state.unlockedFaces.includes(key);
+                    const isEquipped = this.state.equippedFace === key;
+                    const currencyInfo = CURRENCY_MAP[face.currency];
+                    
+                    const div = document.createElement('div');
+                    div.className = `p-2 rounded flex justify-between items-center ${isEquipped ? 'bg-orange-900/50 border border-orange-500' : 'bg-gray-700'}`;
+                    
+                    let actionBtn = '';
+                    if (isEquipped) {
+                        actionBtn = `<span class="text-xs text-orange-400 font-bold">Выбрано</span>`;
+                    } else if (isUnlocked) {
+                        actionBtn = `<button onclick="game.equipFace('${key}')" class="bg-gray-600 hover:bg-gray-500 text-white text-xs px-2 py-1 rounded">Выбрать</button>`;
+                    } else {
+                        const canAfford = this.state[currencyInfo.prop] >= face.cost;
+                        actionBtn = `<button onclick="game.buyFace('${key}')" class="${canAfford ? 'bg-blue-600 hover:bg-blue-500' : 'bg-gray-500 cursor-not-allowed'} text-white text-xs px-2 py-1 rounded">${face.cost.toLocaleString()} ${currencyInfo.icon}</button>`;
+                    }
+
+                    div.innerHTML = `
+                        <div>
+                            <div class="text-sm font-bold text-white">${face.name}</div>
+                            <div class="text-[10px] text-gray-400">Множитель: x${face.mult}</div>
                         </div>
                         ${actionBtn}
                     `;
@@ -584,6 +753,9 @@
                     this.ui.menuOverlay.classList.remove('hidden');
                     this.updateRebirthUI();
                     this.renderSkinsList();
+                    this.renderFacesList();
+                    // Default tab
+                    this.switchTab('exchange');
                 };
                 
                 const closeMenu = () => {
@@ -623,15 +795,15 @@
                 setTimeout(() => {
                     if (sceneManager) {
                         sceneManager.updateSkin(this.state.equippedSkin);
+                        sceneManager.updateFace(this.state.equippedFace);
                     }
                 }, 100);
             }
 
             updateRebirthUI() {
                 const cost = this.getRebirthCost();
-                const needsGem = cost > 100000;
                 let costText = `Цена: ${cost.toLocaleString()} 💰`;
-                if (needsGem) costText += ` + 1 💎`;
+                if (cost > 100000) costText += ` + 1 💎`; // Legacy logic for gems display
                 
                 this.ui.rebirthCost.innerText = costText;
                 this.ui.rebirthMultVal.innerText = `x${this.getRebirthMultiplier().toFixed(2)}`;
@@ -713,7 +885,7 @@
                 this.ballRight.position.set(1.3, 0.8, 0);
                 this.yogurtGroup.add(this.ballRight);
 
-                // --- Hand Model Construction ---
+                // --- Hand Model Construction (Merged) ---
                 this.handGroup = new THREE.Group();
                 const skinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
 
@@ -754,12 +926,20 @@
                 knuckles.position.set(0, 0.6, 1.5);
                 this.handGroup.add(knuckles);
 
-                // Arm
-                const armGeo = new THREE.CylinderGeometry(0.5, 0.6, 5, 16);
+                // Arm (Adjusted to connect to palm)
+                const armGeo = new THREE.CylinderGeometry(0.6, 0.7, 5, 16);
                 const armMesh = new THREE.Mesh(armGeo, skinMat);
-                armMesh.position.set(0, -2.5, 2.0);
+                // Moved up and angled to connect better with palm
+                armMesh.position.set(0, -2.0, 1.7); 
                 armMesh.rotation.x = 0.15; 
                 this.handGroup.add(armMesh);
+                
+                // Wrist connection filler
+                const wristGeo = new THREE.BoxGeometry(1.2, 0.8, 0.6);
+                const wrist = new THREE.Mesh(wristGeo, skinMat);
+                wrist.position.set(0, -0.6, 1.5);
+                wrist.rotation.x = 0.1;
+                this.handGroup.add(wrist);
 
                 this.handBasePos = new THREE.Vector3(0, 1, 0);
                 this.handGroup.position.copy(this.handBasePos);
@@ -770,8 +950,15 @@
                     phase: -Math.PI/2,
                     speed: 0.2
                 };
-
+                
+                // --- Faces Integration ---
+                this.faceGroup = new THREE.Group();
+                this.scene.add(this.faceGroup);
+                this.faceParts = {}; // head, jaw, etc
+                this.faceEatAnim = { active: false, time: 0, state: 0 }; 
+                
                 this.particles = [];
+                this.clock = new THREE.Clock(); // Add this
 
                 window.addEventListener('resize', () => this.onWindowResize(), false);
                 let isDragging = false;
@@ -795,15 +982,12 @@
                 const skin = SKINS_DATA[skinKey];
                 if (skin) {
                     this.bodyMat.color.setHex(skin.color);
-                    
-                    // Reset standard material properties that might have been changed by special effects
                     this.bodyMat.emissive.setHex(0x000000);
                     this.bodyMat.metalness = 0.1;
                     this.bodyMat.roughness = 0.3;
                     this.bodyMat.wireframe = false;
 
-                    // Init basic material props for specific skins
-                    if (skinKey === 'amethyst' || skinKey === 'gold') {
+                    if (skinKey === 'amethyst' || skinKey === 'gold' || skinKey === 'diamond') {
                         this.bodyMat.metalness = 0.8;
                         this.bodyMat.roughness = 0.2;
                     } else if (skinKey === 'ice') {
@@ -811,6 +995,284 @@
                         this.bodyMat.roughness = 0.1;
                     }
                 }
+            }
+
+            updateFace(faceKey) {
+                // Clear existing face
+                while(this.faceGroup.children.length > 0){ 
+                    this.faceGroup.remove(this.faceGroup.children[0]); 
+                }
+                this.faceParts = {};
+
+                if (!faceKey) return;
+                
+                const data = FACES_DATA[faceKey];
+                if (!data) return;
+
+                const skinColor = 0xffccaa;
+                const hairColor = data.hairColor;
+                
+                const skinMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.4 });
+                const hairMat = new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.6 });
+                const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const eyeBlackMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+                const lipMat = new THREE.MeshStandardMaterial({ color: 0xd48c96, roughness: 0.5 }); // Pinkish lips
+                const mouthCavityMat = new THREE.MeshBasicMaterial({ color: 0x5c182a }); // Dark pink internal mouth
+
+                // Create a pivot container for head tilting that sits inside the main faceGroup
+                // This isolates the tilt rotation (X) from the LookAt rotation (Y/Z) of the faceGroup
+                const headTiltGroup = new THREE.Group();
+                this.faceGroup.add(headTiltGroup);
+                this.faceParts.headPivot = headTiltGroup;
+
+                // 1. Head (Main Box/Sphere hybrid look)
+                // Use a Box for structure but maybe slightly rounded logic conceptually
+                const headGeo = new THREE.BoxGeometry(2.4, 2.6, 2.4);
+                const head = new THREE.Mesh(headGeo, skinMat);
+                headTiltGroup.add(head);
+                this.faceParts.head = head;
+
+                // 2. Hair Generation (Updated logic for specific styles)
+                const hairGroup = new THREE.Group();
+                head.add(hairGroup);
+                
+                if (data.isBoy) {
+                    // Short hair for boy (Standard)
+                    const topHair = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.6, 2.6), hairMat);
+                    topHair.position.y = 1.4;
+                    hairGroup.add(topHair);
+                    const backHair = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.5, 0.6), hairMat);
+                    backHair.position.set(0, 0.6, -1.05);
+                    hairGroup.add(backHair);
+                } else {
+                    // --- Female Styles ---
+                    // Base Cap for all girls
+                    const topHair = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.6, 2.5), hairMat);
+                    topHair.position.y = 1.4;
+                    hairGroup.add(topHair);
+
+                    if (faceKey === 'girl1') {
+                        // Blonde - Pigtails / Twin Tails (Playful)
+                        const pigtailGeo = new THREE.BoxGeometry(0.8, 3.5, 0.8);
+                        const leftPigtail = new THREE.Mesh(pigtailGeo, hairMat);
+                        leftPigtail.position.set(-1.6, 0.5, -0.8);
+                        leftPigtail.rotation.z = 0.3;
+                        leftPigtail.rotation.x = 0.2;
+                        hairGroup.add(leftPigtail);
+                        
+                        const rightPigtail = leftPigtail.clone();
+                        rightPigtail.position.set(1.6, 0.5, -0.8);
+                        rightPigtail.rotation.z = -0.3;
+                        hairGroup.add(rightPigtail);
+
+                        // Bangs
+                        const bangs = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.8, 0.2), hairMat);
+                        bangs.position.set(0, 0.8, 1.3);
+                        hairGroup.add(bangs);
+
+                    } else if (faceKey === 'girl2') {
+                        // Brunette - Long straight Hime cut (Elegant)
+                        const backHair = new THREE.Mesh(new THREE.BoxGeometry(2.7, 4.0, 0.6), hairMat);
+                        backHair.position.set(0, -0.5, -1.1);
+                        hairGroup.add(backHair);
+                        
+                        // Side locks
+                        const sideLockGeo = new THREE.BoxGeometry(0.5, 3.0, 1.0);
+                        const leftLock = new THREE.Mesh(sideLockGeo, hairMat);
+                        leftLock.position.set(-1.3, -0.2, 0.5);
+                        hairGroup.add(leftLock);
+                        const rightLock = leftLock.clone();
+                        rightLock.position.set(1.3, -0.2, 0.5);
+                        hairGroup.add(rightLock);
+
+                        // Straight bangs
+                        const bangs = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.9, 0.1), hairMat);
+                        bangs.position.set(0, 0.9, 1.3);
+                        hairGroup.add(bangs);
+
+                    } else if (faceKey === 'girl3') {
+                        // Redhead - Voluminous Bob (Hot)
+                        const bobGeo = new THREE.SphereGeometry(1.6, 16, 16, 0, Math.PI * 2, 0, Math.PI/2);
+                        const bob = new THREE.Mesh(bobGeo, hairMat);
+                        bob.scale.set(1, 1, 0.9);
+                        bob.position.set(0, 0.5, 0);
+                        hairGroup.add(bob);
+                        
+                        // Side wisps
+                        const wispGeo = new THREE.ConeGeometry(0.5, 2.5, 4);
+                        const leftWisp = new THREE.Mesh(wispGeo, hairMat);
+                        leftWisp.position.set(-1.2, -0.5, 0.8);
+                        leftWisp.rotation.z = 0.2;
+                        leftWisp.rotation.y = -0.5;
+                        hairGroup.add(leftWisp);
+                         const rightWisp = leftWisp.clone();
+                        rightWisp.position.set(1.2, -0.5, 0.8);
+                        rightWisp.rotation.z = -0.2;
+                        rightWisp.rotation.y = 0.5;
+                        hairGroup.add(rightWisp);
+
+                    } else if (faceKey === 'girl4') {
+                        // Platinum - High Ponytail (Idol style)
+                        const ponyBase = new THREE.Mesh(new THREE.SphereGeometry(0.6), hairMat);
+                        ponyBase.position.set(0, 1.8, -0.8);
+                        hairGroup.add(ponyBase);
+
+                        const ponytail = new THREE.Mesh(new THREE.ConeGeometry(0.8, 4.5, 8), hairMat);
+                        ponytail.position.set(0, 2.5, -1.5);
+                        ponytail.rotation.x = -0.5;
+                        // Attach to ponybase for physics simulation look (static here)
+                        ponyBase.add(ponytail); 
+                        ponytail.position.set(0, 0, 0); // Reset relative
+                        ponytail.translateY(2.0); // Move out
+                        
+                        // Long side bangs
+                        const sideBangGeo = new THREE.BoxGeometry(0.4, 4.0, 0.4);
+                        const leftBang = new THREE.Mesh(sideBangGeo, hairMat);
+                        leftBang.position.set(-1.2, -0.5, 1.0);
+                        leftBang.rotation.z = 0.1;
+                        hairGroup.add(leftBang);
+                        const rightBang = leftBang.clone();
+                        rightBang.position.set(1.2, -0.5, 1.0);
+                        rightBang.rotation.z = -0.1;
+                        hairGroup.add(rightBang);
+                    }
+                }
+
+                // 3. Face Features Group
+                const featuresGroup = new THREE.Group();
+                featuresGroup.position.z = 1.25; // Front of face
+                head.add(featuresGroup);
+
+                // Eyes
+                const eyeGeo = new THREE.PlaneGeometry(0.5, 0.5);
+                const leftEye = new THREE.Group();
+                const leftWhite = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.1), eyeWhiteMat);
+                const leftPupil = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.12), eyeBlackMat);
+                leftEye.add(leftWhite);
+                leftEye.add(leftPupil);
+                leftEye.position.set(-0.6, 0.3, 0);
+                featuresGroup.add(leftEye);
+
+                const rightEye = leftEye.clone();
+                rightEye.position.set(0.6, 0.3, 0);
+                featuresGroup.add(rightEye);
+
+                // Ears
+                const earGeo = new THREE.BoxGeometry(0.3, 0.6, 0.3);
+                const leftEar = new THREE.Mesh(earGeo, skinMat);
+                leftEar.position.set(-1.3, 0, -0.2); // Side of head
+                head.add(leftEar);
+                
+                const rightEar = leftEar.clone();
+                rightEar.position.set(1.3, 0, -0.2);
+                head.add(rightEar);
+
+                // Nose
+                const noseGeo = new THREE.BoxGeometry(0.3, 0.4, 0.3);
+                const nose = new THREE.Mesh(noseGeo, skinMat);
+                nose.position.set(0, -0.1, 0); // Relative to features plane
+                featuresGroup.add(nose);
+
+                // Throat (Static, Dark)
+                const throatGeo = new THREE.PlaneGeometry(0.6, 0.8);
+                const throat = new THREE.Mesh(throatGeo, mouthCavityMat);
+                throat.position.set(0, -0.85, -0.05); // Behind lips, centered vertically relative to features
+                featuresGroup.add(throat);
+
+                // Mouth (Articulated)
+                // Upper Lip (Static relative to head)
+                const upperLipGeo = new THREE.BoxGeometry(0.8, 0.15, 0.1);
+                const upperLip = new THREE.Mesh(upperLipGeo, lipMat);
+                upperLip.position.set(0, -0.5, 0);
+                featuresGroup.add(upperLip);
+
+                // Jaw (Lower Lip + Chin) - Pivot Point is crucial for opening
+                const jawGroup = new THREE.Group();
+                // Pivot point: slightly back and up from chin
+                jawGroup.position.set(0, -0.5, -0.5); 
+                head.add(jawGroup);
+                this.faceParts.jaw = jawGroup;
+
+                // Jaw Mesh relative to pivot
+                const jawMesh = new THREE.Mesh(new THREE.BoxGeometry(2.41, 0.8, 2.0), skinMat); // Slightly wider than head to overlap seam? Or same width
+                jawMesh.scale.set(0.98, 1, 1); // Fit inside
+                jawMesh.position.set(0, -0.4, 0.5); // Extend forward
+                jawGroup.add(jawMesh);
+
+                // Throat Cover (Dynamic, Skin, moves with jaw to reveal throat)
+                const throatCoverGeo = new THREE.PlaneGeometry(0.65, 0.8);
+                const throatCover = new THREE.Mesh(throatCoverGeo, skinMat);
+                throatCover.position.set(0, -0.35, 1.72); // Positioned to cover throat when closed
+                jawGroup.add(throatCover);
+
+                // Lower Lip on Jaw
+                const lowerLip = new THREE.Mesh(upperLipGeo, lipMat);
+                lowerLip.position.set(0, 0.05, 1.76); // Match front face Z approx (1.2 + 0.5 offset)
+                jawGroup.add(lowerLip);
+                
+                // --- Body Generation (Mini Body) ---
+                if (!data.isBoy) {
+                    const bodyGroup = new THREE.Group();
+                    // Attach to FaceGroup (so it moves with position) but NOT headPivot (so it doesn't tilt with head)
+                    bodyGroup.position.set(0, -2.8, 0); 
+                    this.faceGroup.add(bodyGroup);
+
+                    // Neck
+                    const neckGeo = new THREE.CylinderGeometry(0.6, 0.7, 1.5, 16);
+                    const neck = new THREE.Mesh(neckGeo, skinMat);
+                    neck.position.y = 1.0;
+                    bodyGroup.add(neck);
+
+                    // Clothing Material
+                    const clothingMat = new THREE.MeshStandardMaterial({ 
+                        color: data.clothingColor || 0xffffff, 
+                        roughness: 0.5 
+                    });
+
+                    // Torso (Upper Chest)
+                    const torsoGeo = new THREE.CylinderGeometry(1.2, 1.0, 2.0, 8); // Tapered
+                    const torso = new THREE.Mesh(torsoGeo, clothingMat);
+                    torso.scale.set(1.5, 1, 0.8); // Wider shoulders, thinner depth
+                    torso.position.y = -0.5;
+                    bodyGroup.add(torso);
+
+                    // Bust / Breasts
+                    // Scale based on price/data
+                    const bustScale = data.bustScale || 0.5; 
+                    
+                    const breastGeo = new THREE.SphereGeometry(0.6, 16, 16);
+                    const leftBreast = new THREE.Mesh(breastGeo, clothingMat);
+                    leftBreast.position.set(-0.6, 0.0, 0.7); // Front of torso
+                    leftBreast.scale.set(bustScale, bustScale, bustScale);
+                    leftBreast.rotation.x = -0.2;
+                    bodyGroup.add(leftBreast);
+
+                    const rightBreast = leftBreast.clone();
+                    rightBreast.position.set(0.6, 0.0, 0.7);
+                    bodyGroup.add(rightBreast);
+                    
+                    // Shoulders
+                    const shoulderGeo = new THREE.SphereGeometry(0.7, 16, 16);
+                    const leftShoulder = new THREE.Mesh(shoulderGeo, skinMat);
+                    leftShoulder.position.set(-1.6, 0.2, 0);
+                    bodyGroup.add(leftShoulder);
+                    
+                    const rightShoulder = leftShoulder.clone();
+                    rightShoulder.position.set(1.6, 0.2, 0);
+                    bodyGroup.add(rightShoulder);
+                }
+
+
+                // Initial Position
+                this.faceGroup.position.set(0, 6.5, -3); 
+                this.faceGroup.lookAt(0, 5, 0); // Look at spout
+            }
+            
+            triggerFaceEat() {
+                // Restart animation
+                this.faceEatAnim.active = true;
+                this.faceEatAnim.time = 0;
+                this.faceEatAnim.hasSpit = false;
             }
 
             triggerHandStroke() {
@@ -825,14 +1287,19 @@
             }
 
             erupt(type) {
-                const count = game.state.optimized ? 500 : 100050; 
+                const count = game.state.optimized ? 200 : 800; // Adjusted for performance
                 const geoSegs = game.state.optimized ? 6 : 4; 
                 const geometry = new THREE.SphereGeometry(0.1, geoSegs, geoSegs);
                 
                 let materials = [];
+                let isNuclear = false;
+
                 if (type === 'rainbow') {
                     const colors = [0xff0000, 0xff7f00, 0xffff00, 0x00ff00, 0x0000ff, 0x4b0082, 0x9400d3];
                     materials = colors.map(c => new THREE.MeshPhongMaterial({ color: c }));
+                } else if (type === 'nuclear') {
+                    isNuclear = true;
+                    materials = [new THREE.MeshStandardMaterial({ color: 0x39ff14, emissive: 0x39ff14, emissiveIntensity: 2.0 })];
                 } else {
                     let color = (type === 'yellow') ? 0xffd700 : 0xffffff;
                     materials = [new THREE.MeshPhongMaterial({ color: color })];
@@ -851,17 +1318,71 @@
 
                     const velocity = new THREE.Vector3(
                         (Math.random() - 0.5) * 3, 
-                        Math.random() * 5 + 3, 
+                        Math.random() * 8 + 5, // Higher eruption 
                         (Math.random() - 0.5) * 3
                     );
+                    
+                    // If face exists, bias velocity slightly towards face (Z -5)
+                    if (game.state.equippedFace) {
+                        velocity.z -= Math.random() * 2;
+                    }
+
                     this.scene.add(mesh);
-                    const life = game.state.optimized ? 1.0 : 3.0;
-                    this.particles.push({ mesh, velocity, life: life });
+                    const life = game.state.optimized ? 1.0 : 10.0; // Increased life
+                    this.particles.push({ mesh, velocity, life: life, isNuclear: isNuclear });
                 }
             }
+            
+            spawnNuclearExplosion(position) {
+                const geo = new THREE.TorusGeometry(0.1, 0.1, 8, 16);
+                const mat = new THREE.MeshBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 1 });
+                const mesh = new THREE.Mesh(geo, mat);
+                mesh.position.copy(position);
+                mesh.position.y = 0.1; // Just above ground
+                mesh.rotation.x = Math.PI / 2;
+                this.scene.add(mesh);
+                
+                const animateExplosion = () => {
+                    if (!mesh.parent) return;
+                    mesh.scale.multiplyScalar(1.1);
+                    mesh.material.opacity -= 0.05;
+                    if (mesh.material.opacity <= 0) {
+                        this.scene.remove(mesh);
+                        mesh.geometry.dispose();
+                    } else {
+                        requestAnimationFrame(animateExplosion);
+                    }
+                };
+                animateExplosion();
+            }
 
-            explodeModel() {
-                this.bodyMat.color.setHex(0xff0000);
+            spitParticles() {
+                // Spawn particles from mouth
+                const count = 30;
+                const geometry = new THREE.SphereGeometry(0.08, 4, 4);
+                const material = new THREE.MeshPhongMaterial({ color: 0xffffff }); // White yogurt
+
+                for (let i = 0; i < count; i++) {
+                    const mesh = new THREE.Mesh(geometry, material);
+                    
+                    // Start position roughly at mouth: FaceGroup Position + Offset
+                    // Face is at 0, 6.5, -3. Mouth offset ~ (0, -0.5, 1.5) relative to head center
+                    // Approximate world pos:
+                    mesh.position.set(
+                        (Math.random() - 0.5) * 0.5, 
+                        6.0, 
+                        -1.8 
+                    );
+
+                    const velocity = new THREE.Vector3(
+                        (Math.random() - 0.5) * 2, 
+                        Math.random() * 2, 
+                        Math.random() * 3 + 2 // Shoot forward (+Z)
+                    );
+                    
+                    this.scene.add(mesh);
+                    this.particles.push({ mesh, velocity, life: 3.0, isNuclear: false });
+                }
             }
 
             resetModel() {
@@ -893,11 +1414,18 @@
                     p.mesh.position.addScaledVector(p.velocity, delta);
                     p.life -= delta * 0.5;
                     
+                    // Bounce floor
                     if (p.mesh.position.y < 0) {
                         p.mesh.position.y = 0;
-                        p.velocity.y *= -0.5;
+                        p.velocity.y *= -0.6; // Bounciness
                         p.velocity.x *= 0.8;
                         p.velocity.z *= 0.8;
+                        
+                        if (p.isNuclear && Math.abs(p.velocity.y) > 1.0) {
+                            this.spawnNuclearExplosion(p.mesh.position);
+                            // Nuclear particles die on impact to avoid lag from explosions
+                            p.life = 0; 
+                        }
                     }
                     
                     if (p.life <= 0) {
@@ -907,15 +1435,91 @@
                     }
                 }
             }
+            
+            updateFaceAnim(delta) {
+                if (!this.faceEatAnim.active || !this.faceParts.head || !this.faceParts.jaw || !this.faceParts.headPivot) return;
+
+                // Total duration: 1.0 seconds as requested
+                // Phases:
+                // 0.00 - 0.20: Catch (Open mouth, tilt back)
+                // 0.20 - 0.40: Swallow (Close mouth, neutral tilt)
+                // 0.40 - 0.60: Digest (Short wait)
+                // 0.60 - 0.80: Prepare Spit (Open mouth, tilt forward)
+                // 0.80 - 1.00: Spit (Eject particles, close mouth)
+
+                this.faceEatAnim.time += delta;
+                const t = this.faceEatAnim.time;
+                
+                let jawAngle = 0;
+                let headTilt = 0;
+
+                if (t < 0.2) {
+                    // Catch Phase (0.2s)
+                    const p = t / 0.2;
+                    jawAngle = p * 0.5; 
+                    headTilt = -p * 0.4; // Tilt Back
+                } else if (t < 0.4) {
+                    // Swallow Phase (0.2s)
+                    const p = (t - 0.2) / 0.2;
+                    jawAngle = 0.5 * (1 - p); 
+                    headTilt = -0.4 * (1 - p); // Return to neutral
+                } else if (t < 0.6) {
+                    // Waiting (0.2s)
+                    jawAngle = 0;
+                    headTilt = 0;
+                } else if (t < 0.8) {
+                    // Prepare Spit (0.2s)
+                    const p = (t - 0.6) / 0.2;
+                    jawAngle = p * 0.5;
+                    headTilt = p * 0.4; // Tilt Forward
+                } else if (t < 1.0) {
+                    // Spit & Return (0.2s)
+                    if (!this.faceEatAnim.hasSpit) {
+                        this.spitParticles();
+                        this.faceEatAnim.hasSpit = true;
+                    }
+                    const p = (t - 0.8) / 0.2;
+                    jawAngle = 0.5 * (1 - p);
+                    headTilt = 0.4 * (1 - p);
+                } else {
+                    // End
+                    this.faceEatAnim.active = false;
+                    jawAngle = 0;
+                    headTilt = 0;
+                }
+
+                // Apply rotations
+                this.faceParts.jaw.rotation.x = jawAngle;
+                this.faceParts.headPivot.rotation.x = headTilt; 
+            }
 
             animate() {
                 requestAnimationFrame(() => this.animate());
-                const delta = 0.016;
-                const time = Date.now() * 0.001;
+                // Use real time delta to fix consistency across devices
+                const delta = Math.min(this.clock.getDelta(), 0.1); 
+                const time = this.clock.getElapsedTime();
 
                 this.controls.update();
+                
+                // --- Background Physics (Parallax + Zoom) ---
+                const angle = this.controls.getAzimuthalAngle(); // -PI to PI
+                const dist = this.controls.getDistance(); // Approx 5 to 20
+                
+                // 1. Rotation: Map -PI..PI to a wider percentage range to scroll the image
+                // 50% is center. 
+                const xOffset = 50 + (angle / (Math.PI * 2)) * 100;
+                document.body.style.backgroundPosition = `${xOffset}% center`;
+                
+                // 2. Zoom: When controls distance is small (zoomed in to object), we want background to look closer (larger).
+                // When distance is large (zoomed out from object), background looks further (smaller, see more of it).
+                // Distance 5 (Close) -> Size 140%
+                // Distance 20 (Far) -> Size 100%
+                const zoomFactor = 100 + Math.max(0, (20 - dist) * 2.5); // Min 100%
+                document.body.style.backgroundSize = `auto ${zoomFactor}%`;
+
                 this.updateParticles(delta);
                 this.updateHand(delta);
+                this.updateFaceAnim(delta);
 
                 let targetScale = 0.5 + (game.state.currentProgress / 9) * 1.0;
                 if (game.state.currentProgress === 0) targetScale = 0.5;
@@ -935,15 +1539,15 @@
                     this.bodyMat.color.setRGB(r, g, b);
                 } 
                 
-                // 2. Pulse Effects (Sapphire, Toxic, Sun)
-                else if (currentSkin === 'sapphire') {
-                    const pulse = Math.sin(time * 2) * 0.2 + 0.8; // 0.6 to 1.0
-                    this.bodyMat.color.setHex(SKINS_DATA['sapphire'].color);
-                    this.bodyMat.emissive.setHex(0x0000cc);
-                    this.bodyMat.emissiveIntensity = pulse * 0.5;
+                // 2. Pulse Effects
+                else if (currentSkin === 'sapphire' || currentSkin === 'diamond') {
+                    const pulse = Math.sin(time * 3) * 0.3 + 0.7;
+                    this.bodyMat.color.setHex(SKINS_DATA[currentSkin].color);
+                    this.bodyMat.emissive.setHex(0x00aaaa);
+                    this.bodyMat.emissiveIntensity = pulse * 0.8;
                 }
                 else if (currentSkin === 'toxic') {
-                    const pulse = Math.abs(Math.sin(time * 8)); // Fast pulse
+                    const pulse = Math.abs(Math.sin(time * 8)); 
                     this.bodyMat.emissive.setHex(0x33ff00);
                     this.bodyMat.emissiveIntensity = pulse * 0.8;
                 }
@@ -953,10 +1557,10 @@
                     this.bodyMat.emissiveIntensity = pulse;
                 }
 
-                // 3. Shifting Colors (Nebula, Magma)
+                // 3. Shifting Colors 
                 else if (currentSkin === 'nebula') {
-                     const r = Math.sin(time * 0.5) * 0.2 + 0.2; // 0.2 - 0.4
-                     const b = Math.cos(time * 0.5) * 0.2 + 0.6; // 0.4 - 0.8
+                     const r = Math.sin(time * 0.5) * 0.2 + 0.2; 
+                     const b = Math.cos(time * 0.5) * 0.2 + 0.6;
                      this.bodyMat.color.setRGB(r, 0, b);
                 }
                 else if (currentSkin === 'magma') {
@@ -964,10 +1568,10 @@
                      const g = Math.abs(Math.sin(time * 2)) * 0.4; 
                      this.bodyMat.color.setRGB(r, g, 0);
                      this.bodyMat.emissive.setHex(0xff0000);
-                     this.bodyMat.emissiveIntensity = 0.2 + Math.random() * 0.2; // Flicker
+                     this.bodyMat.emissiveIntensity = 0.2 + Math.random() * 0.2; 
                 }
 
-                // 4. Glitch / Flicker (Plasma, Antimatter)
+                // 4. Glitch / Flicker
                 else if (currentSkin === 'plasma') {
                      if (Math.random() > 0.9) {
                          this.bodyMat.emissiveIntensity = 2.0;
@@ -985,7 +1589,7 @@
                     }
                 }
 
-                // Default lerp for static skins to recover from init
+                // Default lerp for static skins
                 else {
                     const target = new THREE.Color(SKINS_DATA[currentSkin].color);
                     this.bodyMat.color.lerp(target, 0.1);
