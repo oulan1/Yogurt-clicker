@@ -179,19 +179,42 @@
         <div class="flex-1 overflow-y-auto p-4 relative">
             
             <!-- Exchange Tab -->
-            <div id="tab-exchange" class="tab-content active space-y-2">
-                <button onclick="game.exchange('gem')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center">
-                    <span>1 💎</span> <span class="text-blue-200 font-mono">10k 💰</span>
-                </button>
-                <button onclick="game.exchange('star')" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center">
-                    <span>1 ⭐</span> <span class="text-yellow-200 font-mono">100 💎</span>
-                </button>
-                <button onclick="game.exchange('flask')" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center">
-                    <span>1 🧪</span> <span class="text-green-200 font-mono">10 ⭐</span>
-                </button>
-                <button onclick="game.exchange('orb')" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center">
-                    <span>1 🔮</span> <span class="text-purple-200 font-mono">10 🧪</span>
-                </button>
+            <div id="tab-exchange" class="tab-content active space-y-4">
+                <div class="flex flex-col gap-1">
+                    <button onclick="game.exchange('gem')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center shadow">
+                        <span>1 💎</span> <span class="text-blue-200 font-mono">10k 💰</span>
+                    </button>
+                    <button onclick="game.exchangeAll('gem')" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow">
+                        Обменять все
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <button onclick="game.exchange('star')" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center shadow">
+                        <span>1 ⭐</span> <span class="text-yellow-200 font-mono">100 💎</span>
+                    </button>
+                    <button onclick="game.exchangeAll('star')" class="w-full bg-yellow-800 hover:bg-yellow-900 text-white py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow">
+                        Обменять все
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <button onclick="game.exchange('flask')" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center shadow">
+                        <span>1 🧪</span> <span class="text-green-200 font-mono">10 ⭐</span>
+                    </button>
+                    <button onclick="game.exchangeAll('flask')" class="w-full bg-green-900 hover:bg-green-800 text-white py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow">
+                        Обменять все
+                    </button>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <button onclick="game.exchange('orb')" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded text-sm flex justify-between px-3 items-center shadow">
+                        <span>1 🔮</span> <span class="text-purple-200 font-mono">10 🧪</span>
+                    </button>
+                    <button onclick="game.exchangeAll('orb')" class="w-full bg-purple-900 hover:bg-purple-800 text-white py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow">
+                        Обменять все
+                    </button>
+                </div>
             </div>
 
             <!-- Skins Tab -->
@@ -224,7 +247,7 @@
                     </button>
                 </div>
                 <div class="text-center">
-                    <p class="text-xs text-gray-600">peni game S v3.16</p>
+                    <p class="text-xs text-gray-600">peni game S v3.17</p>
                 </div>
             </div>
 
@@ -541,6 +564,41 @@
                     if (this.state.flasks >= 10) { 
                         this.state.flasks -= 10;
                         this.state.orbs++;
+                    }
+                }
+                this.updateUI();
+                this.save();
+            }
+            
+            exchangeAll(type) {
+                let amount = 0;
+                if (type === 'gem') {
+                    // Cost: 10000 Money
+                    amount = Math.floor(this.state.money / 10000);
+                    if (amount > 0) {
+                        this.state.money -= amount * 10000;
+                        this.state.gems += amount;
+                    }
+                } else if (type === 'star') {
+                    // Cost: 100 Gems
+                    amount = Math.floor(this.state.gems / 100);
+                    if (amount > 0) {
+                        this.state.gems -= amount * 100;
+                        this.state.stars += amount;
+                    }
+                } else if (type === 'flask') {
+                    // Cost: 10 Stars
+                    amount = Math.floor(this.state.stars / 10);
+                    if (amount > 0) {
+                        this.state.stars -= amount * 10;
+                        this.state.flasks += amount;
+                    }
+                } else if (type === 'orb') {
+                    // Cost: 10 Flasks
+                    amount = Math.floor(this.state.flasks / 10);
+                    if (amount > 0) {
+                        this.state.flasks -= amount * 10;
+                        this.state.orbs += amount;
                     }
                 }
                 this.updateUI();
