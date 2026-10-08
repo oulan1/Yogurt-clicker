@@ -1,0 +1,3182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Yogurt Clicker: Reborn — Liquid Glass iOS26 Masterpiece</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.16);
+            --liquid-pink: #ec4899;
+            --liquid-cyan: #06b6d4;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #030408;
+            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            touch-action: none; 
+            user-select: none; 
+            -webkit-user-select: none;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        #game-canvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 1; 
+        }
+
+        #ui-layer { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 10; 
+            pointer-events: none; 
+        }
+
+        .pointer-events-auto { 
+            pointer-events: auto; 
+        }
+
+        /* --- iOS 26 LIQUID GLASS DESIGN SYSTEM --- */
+        .liquid-glass {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%);
+            backdrop-filter: blur(28px) saturate(210%);
+            -webkit-backdrop-filter: blur(28px) saturate(210%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 
+                0 20px 45px -15px rgba(0, 0, 0, 0.65),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.4),
+                inset 0 -1px 1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .liquid-glass-dark {
+            background: linear-gradient(145deg, rgba(11, 14, 25, 0.90) 0%, rgba(6, 8, 15, 0.96) 100%);
+            backdrop-filter: blur(36px) saturate(200%);
+            -webkit-backdrop-filter: blur(36px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 
+                0 25px 60px rgba(0, 0, 0, 0.85),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+        }
+
+        .liquid-pill {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .liquid-pill:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .liquid-pill:active {
+            transform: scale(0.96);
+        }
+
+        .liquid-btn-accent {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 8px 24px -4px rgba(236, 72, 153, 0.5),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.6);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .liquid-btn-accent:hover {
+            box-shadow: 
+                0 12px 30px -4px rgba(236, 72, 153, 0.75),
+                inset 0 1px 1px 0 rgba(255, 255, 255, 0.8);
+            transform: translateY(-1px);
+        }
+
+        .liquid-btn-accent:active {
+            transform: scale(0.96);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+
+        /* Floating numbers */
+        #floating-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 25;
+        }
+
+        .float-number {
+            position: absolute;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.85);
+            animation: floatAndFade 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            white-space: nowrap;
+        }
+
+        @keyframes floatAndFade {
+            0% { opacity: 0; transform: translateY(0) scale(0.5); }
+            20% { opacity: 1; transform: translateY(-20px) scale(1.15); }
+            80% { opacity: 0.9; transform: translateY(-60px) scale(1); }
+            100% { opacity: 0; transform: translateY(-90px) scale(0.8); }
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .nav-tab-btn.active {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.35) 0%, rgba(139, 92, 246, 0.35) 100%);
+            border-color: rgba(255, 255, 255, 0.45);
+            color: #ffffff;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 15px rgba(236, 72, 153, 0.25);
+        }
+
+        /* Sliders */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 9999px;
+            height: 6px;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #ec4899;
+            box-shadow: 0 0 10px rgba(236, 72, 153, 0.8), inset 0 1px 1px #fff;
+            cursor: pointer;
+            border: 2px solid #ffffff;
+        }
+
+        /* Overheat Animation */
+        @keyframes overheatPulse {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); filter: drop-shadow(0 0 15px #ef4444); }
+        }
+        .overheat-active {
+            animation: overheatPulse 0.4s infinite alternate;
+        }
+    </style>
+
+    <!-- Three.js CDN with Importmap -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- 1. LOADING SCREEN (REBORN SVG LOGO)        -->
+    <!-- ========================================== -->
+    <div id="loading-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#05070f] text-white flex-col transition-opacity duration-1000 p-6">
+        <div class="absolute w-96 h-96 bg-pink-500/20 rounded-full blur-[130px] pointer-events-none"></div>
+        <div class="absolute w-80 h-80 bg-cyan-500/15 rounded-full blur-[110px] pointer-events-none translate-x-24 translate-y-24"></div>
+
+        <!-- SVG LOGO: "PENI" over "GAME", and large "S" across 2 lines -->
+        <div class="relative z-10 flex items-center gap-4 mb-6">
+            <svg class="h-28 w-auto overflow-visible" viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="textGrad" x1="0" y1="0" x2="300" y2="120" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#FFFFFF" />
+                        <stop offset="35%" stop-color="#F472B6" />
+                        <stop offset="70%" stop-color="#C084FC" />
+                        <stop offset="100%" stop-color="#38BDF8" />
+                    </linearGradient>
+                    <linearGradient id="sGrad" x1="180" y1="0" x2="300" y2="120" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#F43F5E" />
+                        <stop offset="50%" stop-color="#D946EF" />
+                        <stop offset="100%" stop-color="#06B6D4" />
+                    </linearGradient>
+                    <filter id="liquidGlow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="8" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+                <text x="180" y="48" text-anchor="end" font-family="'Outfit', sans-serif" font-weight="900" font-size="44" letter-spacing="4" fill="url(#textGrad)">PENI</text>
+                <text x="180" y="102" text-anchor="end" font-family="'Outfit', sans-serif" font-weight="900" font-size="44" letter-spacing="4" fill="url(#textGrad)">GAME</text>
+                <text x="195" y="106" font-family="'Outfit', sans-serif" font-weight="900" font-size="118" fill="url(#sGrad)" filter="url(#liquidGlow)">S</text>
+            </svg>
+        </div>
+
+        <div class="relative z-10 px-4 py-1.5 rounded-full liquid-glass text-xs font-semibold tracking-widest text-pink-300 uppercase mb-6 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-pink-500 animate-ping"></span>
+            REBORN EDITION • LIQUID GLASS iOS26
+        </div>
+
+        <div class="relative z-10 w-72 h-2.5 liquid-glass rounded-full overflow-hidden p-0.5">
+            <div id="loading-bar" class="h-full bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 rounded-full w-0 transition-all duration-[1500ms] ease-out shadow-[0_0_15px_rgba(236,72,153,0.8)]"></div>
+        </div>
+
+        <button id="start-game-btn" class="relative z-10 mt-6 liquid-btn-accent px-8 py-3 rounded-2xl font-black text-sm tracking-widest uppercase text-white shadow-[0_0_25px_rgba(236,72,153,0.6)] cursor-pointer">
+            ВОЙТИ В ИГРУ
+        </button>
+        <p class="relative z-10 mt-2 text-gray-400 text-[11px]">Нажмите для активации Lo-Fi звука и 3D движка</p>
+    </div>
+
+    <!-- 3D Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Floating numbers layer -->
+    <div id="floating-container"></div>
+
+    <!-- ========================================== -->
+    <!-- 2. MAIN HUD UI LAYER                       -->
+    <!-- ========================================== -->
+    <div id="ui-layer" class="flex flex-col justify-between p-3 md:p-6">
+        
+        <!-- Top Stats Row (Liquid Glass Island) -->
+        <div class="flex items-start justify-between w-full pointer-events-auto">
+            
+            <!-- Currencies Dock -->
+            <div class="flex flex-col gap-2">
+                <div class="liquid-glass rounded-2xl p-2 md:p-3 flex items-center gap-2.5 md:gap-4 flex-wrap max-w-xl">
+                    
+                    <!-- 1. Yogurt SVG -->
+                    <div class="flex items-center gap-1.5 liquid-pill px-2.5 py-1 rounded-xl">
+                        <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.9)]">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                            <ellipse cx="10" cy="11" rx="1.5" ry="3" transform="rotate(-30 10 11)" fill="#ffffff" opacity="0.6"/>
+                        </svg>
+                        <span id="money-display" class="font-mono text-sm md:text-base font-bold text-white tracking-tight">0</span>
+                    </div>
+
+                    <!-- 2. Gem SVG -->
+                    <div class="flex items-center gap-1.5 liquid-pill px-2.5 py-1 rounded-xl">
+                        <svg viewBox="0 0 24 24" class="w-4 h-4 md:w-5 md:h-5 fill-current text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.9)]">
+                            <path d="M6 3h12l5 7-11 11L1 10z"/>
+                        </svg>
+                        <span id="gems-display" class="font-mono text-xs md:text-sm font-bold text-cyan-300">0</span>
+                    </div>
+
+                    <!-- 3. Star SVG -->
+                    <div class="flex items-center gap-1.5 liquid-pill px-2.5 py-1 rounded-xl">
+                        <svg viewBox="0 0 24 24" class="w-4 h-4 md:w-5 md:h-5 fill-current text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.9)]">
+                            <path d="M12 2l2.4 7.2h7.6l-6.1 4.5 2.3 7.3-6.2-4.5-6.2 4.5 2.3-7.3-6.1-4.5h7.6z"/>
+                        </svg>
+                        <span id="stars-display" class="font-mono text-xs md:text-sm font-bold text-amber-300">0</span>
+                    </div>
+
+                    <!-- 4. Flask SVG -->
+                    <div class="flex items-center gap-1.5 liquid-pill px-2.5 py-1 rounded-xl">
+                        <svg viewBox="0 0 24 24" class="w-4 h-4 md:w-5 md:h-5 fill-current text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
+                            <path d="M9 2h6v2h-1v5.17l5.61 9.35A2 2 0 0 1 17.89 22H6.11a2 2 0 0 1-1.72-3.48L10 9.17V4H9zm2 9l-4 6.7h10L13 11z"/>
+                        </svg>
+                        <span id="flasks-display" class="font-mono text-xs md:text-sm font-bold text-emerald-300">0</span>
+                    </div>
+
+                    <!-- 5. Orb SVG -->
+                    <div class="flex items-center gap-1.5 liquid-pill px-2.5 py-1 rounded-xl">
+                        <svg viewBox="0 0 24 24" class="w-4 h-4 md:w-5 md:h-5 fill-current text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.9)]">
+                            <circle cx="12" cy="12" r="7"/>
+                            <ellipse cx="12" cy="12" rx="10" ry="3.5" fill="none" stroke="currentColor" stroke-width="1.8" transform="rotate(-25 12 12)"/>
+                        </svg>
+                        <span id="orbs-display" class="font-mono text-xs md:text-sm font-bold text-purple-300">0</span>
+                    </div>
+
+                </div>
+
+                <!-- Rebirth & Room Indicator -->
+                <div class="flex items-center gap-2">
+                    <div class="liquid-glass rounded-xl px-3 py-1 text-xs text-gray-300 flex items-center gap-2">
+                        <span class="text-pink-400">🌀 Перерождение:</span>
+                        <span id="rebirth-display" class="text-white font-bold">0</span>
+                        <span class="text-gray-500">|</span>
+                        <span class="text-emerald-400 font-semibold">x<span id="multiplier-display">1.00</span></span>
+                    </div>
+
+                    <div id="room-badge" class="liquid-glass rounded-xl px-3 py-1 text-xs text-cyan-300 hidden md:block">
+                        🏛️ <span id="current-room-name">Студия стекла</span>
+                    </div>
+
+                    <!-- Anti-Autoclicker Overheat Badge -->
+                    <div id="overheat-badge" class="hidden liquid-glass px-3 py-1 rounded-xl text-xs font-bold text-red-400 border border-red-500/60 bg-red-950/40 overheat-active">
+                        🔥 ПЕРЕГРЕВ! Остывание...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Right Controls (Audio, Progress Ring) -->
+            <div class="flex items-center gap-2">
+                
+                <!-- Lo-Fi Music Button -->
+                <button id="music-toggle-btn" class="liquid-pill p-2.5 rounded-2xl flex items-center justify-center text-pink-300 hover:text-white" title="Вкл/Выкл Lo-Fi Музыку">
+                    <svg id="music-icon" viewBox="0 0 24 24" class="w-5 h-5 fill-current">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                </button>
+
+                <!-- SFX Toggle -->
+                <button id="sfx-toggle-btn" class="liquid-pill p-2.5 rounded-2xl flex items-center justify-center text-cyan-300 hover:text-white" title="Вкл/Выкл Звуки">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                </button>
+
+                <!-- Progress Ring Indicator (0/10) -->
+                <div class="relative w-14 h-14 md:w-16 md:h-16 liquid-glass rounded-2xl flex items-center justify-center overflow-hidden border border-pink-500/40 shadow-[0_0_20px_rgba(236,72,153,0.3)]">
+                    <div id="progress-ring-bg" class="absolute inset-0 bg-gradient-to-t from-pink-600/30 to-transparent"></div>
+                    <span id="progress-display" class="font-heading text-lg md:text-xl font-black text-white relative z-10">0/10</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Center Click Prompt -->
+        <div class="absolute bottom-24 left-0 right-0 text-center pointer-events-none opacity-40 text-xs md:text-sm tracking-wider uppercase text-pink-200">
+            Нажимай на экран для сбора йогурта
+        </div>
+
+        <!-- Bottom Controls Dock -->
+        <div class="w-full flex justify-between items-end pointer-events-none pb-1">
+            <div class="flex items-center gap-3 pointer-events-auto">
+                <button id="menu-btn" class="liquid-btn-accent text-white p-3.5 md:p-4 rounded-2xl flex items-center gap-2 group">
+                    <svg class="h-6 w-6 stroke-current" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <span class="font-bold text-sm hidden md:inline pr-1">Меню</span>
+                </button>
+
+                <button id="minigames-btn" class="liquid-pill bg-purple-600/40 hover:bg-purple-600/60 text-white p-3.5 md:p-4 rounded-2xl flex items-center gap-2 border border-purple-400/40 shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                    <span class="text-xl">🎮</span>
+                    <span class="font-bold text-sm hidden md:inline pr-1">Мини-игры</span>
+                </button>
+            </div>
+
+            <div class="pointer-events-auto">
+                <button id="chat-btn" class="liquid-pill bg-blue-600/40 hover:bg-blue-600/60 text-white p-3.5 md:p-4 rounded-2xl flex items-center gap-2 border border-blue-400/40 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                    <svg class="h-6 w-6 stroke-current" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    <span class="font-bold text-sm hidden md:inline pr-1">Чат</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 3. SIDE MENU DRAWER (LIQUID GLASS iOS26)   -->
+    <!-- ========================================== -->
+    <div id="menu-overlay" class="hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-md pointer-events-auto transition-opacity duration-300"></div>
+
+    <div id="side-menu" class="fixed top-0 left-0 h-full w-full max-w-md liquid-glass-dark transform -translate-x-full transition-transform duration-300 z-50 flex flex-col pointer-events-auto shadow-2xl">
+        
+        <!-- Header -->
+        <div class="p-4 md:p-5 border-b border-white/10 flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-purple-500 flex items-center justify-center font-black text-white text-sm shadow-[0_0_15px_rgba(236,72,153,0.5)]">
+                    S
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-white leading-tight">Yogurt Reborn</h2>
+                    <p class="text-[11px] text-pink-400 font-medium">Liquid Glass Engine iOS26</p>
+                </div>
+            </div>
+            <button id="close-menu" class="liquid-pill w-8 h-8 rounded-xl flex items-center justify-center text-gray-300 hover:text-white text-xl">&times;</button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="p-3 grid grid-cols-6 gap-1 shrink-0 border-b border-white/5">
+            <button onclick="game.switchTab('exchange')" id="nav-btn-exchange" class="nav-tab-btn active liquid-pill py-2 rounded-xl text-[10px] font-bold text-gray-300 flex flex-col items-center gap-0.5">
+                <span>🛒</span><span>Обмен</span>
+            </button>
+            <button onclick="game.switchTab('skins')" id="nav-btn-skins" class="nav-tab-btn liquid-pill py-2 rounded-xl text-[10px] font-bold text-gray-300 flex flex-col items-center gap-0.5">
+                <span>👕</span><span>Скины</span>
+            </button>
+            <button onclick="game.switchTab('hands')" id="nav-btn-hands" class="nav-tab-btn liquid-pill py-2 rounded-xl text-[10px] font-bold text-gray-300 flex flex-col items-center gap-0.5">
+                <span>🦾</span><span>Рука</span>
+            </button>
+            <button onclick="game.switchTab('faces')" id="nav-btn-faces" class="nav-tab-btn liquid-pill py-2 rounded-xl text-[10px] font-bold text-gray-300 flex flex-col items-center gap-0.5">
+                <span>👤</span><span>Лица</span>
+            </button>
+            <button onclick="game.switchTab('rooms')" id="nav-btn-rooms" class="nav-tab-btn liquid-pill py-2 rounded-xl text-[10px] font-bold text-gray-300 flex flex-col items-center gap-0.5">
+                <span>🏛️</span><span>Фоны</span>
+            </button>
+            <button onclick="game.switchTab('settings')" id="nav-btn-settings" class="nav-tab-btn liquid-pill py-2 rounded-xl text-[10px] font-bold text-gray-300 flex flex-col items-center gap-0.5">
+                <span>⚙️</span><span>Опции</span>
+            </button>
+        </div>
+
+        <!-- Tab Contents Area -->
+        <div class="flex-1 overflow-y-auto p-4 relative space-y-4">
+            
+            <!-- TAB 1: EXCHANGE -->
+            <div id="tab-exchange" class="tab-content active space-y-3">
+                <div class="text-xs text-gray-400 mb-2">Обменивай валюты на более ценные кристаллы и артефакты:</div>
+                <div class="liquid-glass rounded-2xl p-3 border border-cyan-500/20 space-y-2">
+                    <div class="flex justify-between items-center text-sm font-bold">
+                        <span class="text-cyan-300">💎 1 Гем</span>
+                        <span class="font-mono text-gray-300 text-xs">15,000 💧</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="game.exchange('gem')" class="liquid-pill bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 py-2 rounded-xl text-xs font-bold">Купить 1</button>
+                        <button onclick="game.exchangeAll('gem')" class="liquid-pill bg-cyan-900/40 hover:bg-cyan-800/50 text-white py-2 rounded-xl text-xs font-bold">Все возможное</button>
+                    </div>
+                </div>
+                <div class="liquid-glass rounded-2xl p-3 border border-amber-500/20 space-y-2">
+                    <div class="flex justify-between items-center text-sm font-bold">
+                        <span class="text-amber-300">⭐ 1 Звезда</span>
+                        <span class="font-mono text-gray-300 text-xs">120 💎</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="game.exchange('star')" class="liquid-pill bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 py-2 rounded-xl text-xs font-bold">Купить 1</button>
+                        <button onclick="game.exchangeAll('star')" class="liquid-pill bg-amber-900/40 hover:bg-amber-800/50 text-white py-2 rounded-xl text-xs font-bold">Все возможное</button>
+                    </div>
+                </div>
+                <div class="liquid-glass rounded-2xl p-3 border border-emerald-500/20 space-y-2">
+                    <div class="flex justify-between items-center text-sm font-bold">
+                        <span class="text-emerald-300">🧪 1 Колба</span>
+                        <span class="font-mono text-gray-300 text-xs">15 ⭐</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="game.exchange('flask')" class="liquid-pill bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-200 py-2 rounded-xl text-xs font-bold">Купить 1</button>
+                        <button onclick="game.exchangeAll('flask')" class="liquid-pill bg-emerald-900/40 hover:bg-emerald-800/50 text-white py-2 rounded-xl text-xs font-bold">Все возможное</button>
+                    </div>
+                </div>
+                <div class="liquid-glass rounded-2xl p-3 border border-purple-500/20 space-y-2">
+                    <div class="flex justify-between items-center text-sm font-bold">
+                        <span class="text-purple-300">🔮 1 Сфера</span>
+                        <span class="font-mono text-gray-300 text-xs">15 🧪</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="game.exchange('orb')" class="liquid-pill bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 py-2 rounded-xl text-xs font-bold">Купить 1</button>
+                        <button onclick="game.exchangeAll('orb')" class="liquid-pill bg-purple-900/40 hover:bg-purple-800/50 text-white py-2 rounded-xl text-xs font-bold">Все возможное</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: SKINS -->
+            <div id="tab-skins" class="tab-content space-y-2">
+                <div class="text-xs text-gray-400 mb-2">Уникальные PBR-материалы и визуальные эффекты йогурта:</div>
+                <div id="skins-list" class="space-y-2"></div>
+            </div>
+
+            <!-- TAB 3: HANDS -->
+            <div id="tab-hands" class="tab-content space-y-2">
+                <div class="text-xs text-gray-400 mb-2">Стили анатомической кисти, обхватывающей йогурт:</div>
+                <div id="hands-list" class="space-y-2"></div>
+            </div>
+
+            <!-- TAB 4: FACES -->
+            <div id="tab-faces" class="tab-content space-y-2">
+                <div class="text-xs text-gray-400 mb-2">Персонажи с анатомической ротовой полостью и анимацией глотка:</div>
+                <div id="faces-list" class="space-y-2"></div>
+            </div>
+
+            <!-- TAB 5: 3D ROOMS -->
+            <div id="tab-rooms" class="tab-content space-y-2">
+                <div class="text-xs text-gray-400 mb-2">10 детализированных 3D-комнат (на 10 уровне — Кремль):</div>
+                <div id="rooms-list" class="space-y-2"></div>
+            </div>
+
+            <!-- TAB 6: SETTINGS & LO-FI MIXER -->
+            <div id="tab-settings" class="tab-content space-y-4">
+                <div class="liquid-glass rounded-2xl p-3 space-y-3">
+                    <h4 class="text-xs font-bold text-pink-300 uppercase tracking-wider">🎛️ Настройка Lo-Fi Музыки (-10 до +10)</h4>
+                    <p class="text-[11px] text-gray-400 leading-tight">Тонкая настройка процедурного Lo-Fi генератора в реальном времени:</p>
+
+                    <!-- Slider 1: Tempo -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-gray-300">Скорость / Темп (BPM)</span>
+                            <span id="lofi-val-tempo" class="font-mono text-pink-400 font-bold">0</span>
+                        </div>
+                        <input type="range" min="-10" max="10" value="0" id="lofi-slider-tempo" class="w-full" oninput="audioManager.updateParam('tempo', this.value)">
+                    </div>
+
+                    <!-- Slider 2: Bass -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-gray-300">Глубина Баса / Warmth</span>
+                            <span id="lofi-val-bass" class="font-mono text-cyan-400 font-bold">0</span>
+                        </div>
+                        <input type="range" min="-10" max="10" value="0" id="lofi-slider-bass" class="w-full" oninput="audioManager.updateParam('bass', this.value)">
+                    </div>
+
+                    <!-- Slider 3: Vinyl -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-gray-300">Винил / Атмосферный шум</span>
+                            <span id="lofi-val-vinyl" class="font-mono text-amber-400 font-bold">0</span>
+                        </div>
+                        <input type="range" min="-10" max="10" value="0" id="lofi-slider-vinyl" class="w-full" oninput="audioManager.updateParam('vinyl', this.value)">
+                    </div>
+
+                    <!-- Slider 4: Chords -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-gray-300">Яркость Джазовых Аккордов</span>
+                            <span id="lofi-val-chords" class="font-mono text-emerald-400 font-bold">0</span>
+                        </div>
+                        <input type="range" min="-10" max="10" value="0" id="lofi-slider-chords" class="w-full" oninput="audioManager.updateParam('chords', this.value)">
+                    </div>
+
+                    <!-- Slider 5: Reverb / Space -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <span class="text-gray-300">Пространство / Реверберация</span>
+                            <span id="lofi-val-reverb" class="font-mono text-purple-400 font-bold">0</span>
+                        </div>
+                        <input type="range" min="-10" max="10" value="0" id="lofi-slider-reverb" class="w-full" oninput="audioManager.updateParam('reverb', this.value)">
+                    </div>
+                </div>
+
+                <!-- Graphics Mode Selection -->
+                <div class="liquid-glass rounded-2xl p-3 space-y-2">
+                    <span class="text-xs font-bold text-gray-300">Режим рендеринга графики</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="opt-btn-eco" onclick="game.setGraphicsMode(false)" class="liquid-pill py-2 rounded-xl text-xs font-bold text-gray-400">
+                            ⚡ Эко (60 FPS)
+                        </button>
+                        <button id="opt-btn-ultra" onclick="game.setGraphicsMode(true)" class="liquid-pill active py-2 rounded-xl text-xs font-bold text-pink-300 border-pink-500/50">
+                            ✨ Reborn: Ultra
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hard Reset -->
+                <button onclick="game.resetProgress()" class="w-full liquid-pill bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs py-2 rounded-xl border border-red-500/30 font-bold transition-colors">
+                    ⚠️ Сбросить весь прогресс Reborn
+                </button>
+            </div>
+
+        </div>
+
+        <!-- REBIRTH FIXED SECTION -->
+        <div class="p-4 border-t border-white/10 bg-gradient-to-t from-black/80 to-purple-950/40 shrink-0 space-y-2">
+            <div class="flex justify-between items-center text-xs font-bold">
+                <span class="text-purple-300">🌀 Перерождение</span>
+                <span id="rebirth-mult-val" class="text-emerald-400 font-mono">x1.00</span>
+            </div>
+            <button onclick="game.doRebirth()" id="rebirth-btn" class="w-full liquid-btn-accent text-white py-2.5 rounded-2xl font-bold flex items-center justify-center gap-2 text-sm shadow-[0_0_20px_rgba(236,72,153,0.4)]">
+                <span>ПЕРЕРОДИТЬСЯ</span>
+                <span id="rebirth-cost" class="text-xs bg-black/40 px-2.5 py-0.5 rounded-lg border border-white/20">5,000 💧</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 4. MINI-GAMES MODAL (3 ИГРЫ ПЕРЕРАБОТАНЫ)  -->
+    <!-- ========================================== -->
+    <div id="minigames-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl p-3 md:p-6 pointer-events-auto">
+        <div class="liquid-glass-dark rounded-3xl w-full max-w-2xl h-[92vh] max-h-[740px] flex flex-col border border-purple-500/30 overflow-hidden relative shadow-2xl">
+            
+            <div class="p-4 border-b border-white/10 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-2xl">🎮</span>
+                    <div>
+                        <h3 class="text-lg font-bold text-white leading-tight">Мини-игры Reborn</h3>
+                        <p class="text-[11px] text-purple-300">Зарабатывай валюту играя!</p>
+                    </div>
+                </div>
+                <button id="close-minigames" class="liquid-pill w-8 h-8 rounded-xl flex items-center justify-center text-gray-300 hover:text-white text-xl">&times;</button>
+            </div>
+
+            <!-- Game Select Tabs -->
+            <div class="p-2 grid grid-cols-3 gap-2 border-b border-white/5 shrink-0 bg-black/40">
+                <button onclick="minigames.switchGame('flappy')" id="mg-tab-flappy" class="liquid-pill active py-2 rounded-xl text-xs font-bold text-center text-pink-300">
+                    🕊️ Flappy
+                </button>
+                <button onclick="minigames.switchGame('doodle')" id="mg-tab-doodle" class="liquid-pill py-2 rounded-xl text-xs font-bold text-center text-cyan-300">
+                    🦘 Doodle
+                </button>
+                <button onclick="minigames.switchGame('duel')" id="mg-tab-duel" class="liquid-pill py-2 rounded-xl text-xs font-bold text-center text-amber-300">
+                    ⚡ Клик-Дуэль
+                </button>
+            </div>
+
+            <!-- Mini Game Canvas & Duel Arena -->
+            <div class="flex-1 relative flex flex-col items-center justify-center p-2 bg-[#060812] overflow-hidden">
+                <canvas id="mg-canvas" width="480" height="460" class="rounded-2xl border border-white/10 max-w-full max-h-[460px] object-contain cursor-pointer"></canvas>
+
+                <!-- On-Screen Controls for Doodle Jump -->
+                <div id="doodle-touch-controls" class="hidden absolute bottom-3 w-full px-6 flex justify-between pointer-events-auto">
+                    <button id="btn-doodle-left" class="liquid-glass px-6 py-3 rounded-2xl font-black text-lg text-cyan-300 active:scale-95 shadow-lg">
+                        ◀ ВЛЕВО
+                    </button>
+                    <button id="btn-doodle-right" class="liquid-glass px-6 py-3 rounded-2xl font-black text-lg text-cyan-300 active:scale-95 shadow-lg">
+                        ВПРАВО ▶
+                    </button>
+                </div>
+
+                <!-- REAL 3D/2.5D DUEL ARENA -->
+                <div id="duel-overlay" class="hidden absolute inset-0 flex flex-col p-3 pointer-events-auto bg-[#060812]/95">
+                    
+                    <!-- TOP HALF: PLAYER YOGURT + HAND -->
+                    <div id="duel-player-zone" class="flex-1 liquid-glass rounded-2xl flex items-center justify-between p-4 m-1 border-2 border-emerald-500/50 relative active:scale-[0.99] transition-transform cursor-pointer overflow-hidden">
+                        <div class="flex flex-col z-10">
+                            <span class="text-xs uppercase tracking-widest text-emerald-300 font-bold mb-1">Твоя зона (КЛИКАЙ СЮДА!)</span>
+                            <span id="duel-player-score" class="text-4xl font-black text-white font-mono">0</span>
+                        </div>
+                        <canvas id="duel-p-canvas" width="160" height="140" class="pointer-events-none"></canvas>
+                    </div>
+
+                    <!-- MIDDLE STATUS & TUG-OF-WAR BAR -->
+                    <div class="h-11 flex items-center justify-between px-4 liquid-glass rounded-xl my-1 shrink-0">
+                        <span id="duel-timer" class="text-xs font-bold text-amber-300 font-mono">12.0с</span>
+                        <div class="w-48 h-3 bg-gray-900 rounded-full overflow-hidden border border-white/20 mx-2 p-0.5">
+                            <div id="duel-bar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full w-1/2 transition-all"></div>
+                        </div>
+                        <span class="text-[11px] text-purple-300 font-bold">Бот Reborn</span>
+                    </div>
+
+                    <!-- BOTTOM HALF: BOT YOGURT + ROBOTIC HAND -->
+                    <div id="duel-bot-zone" class="flex-1 liquid-glass rounded-2xl flex items-center justify-between p-4 m-1 border-2 border-red-500/50 relative overflow-hidden">
+                        <div class="flex flex-col z-10">
+                            <span class="text-xs uppercase tracking-widest text-red-300 font-bold mb-1">ИИ-Бот</span>
+                            <span id="duel-bot-score" class="text-4xl font-black text-white font-mono">0</span>
+                        </div>
+                        <canvas id="duel-b-canvas" width="160" height="140" class="pointer-events-none"></canvas>
+                    </div>
+                </div>
+
+                <!-- Screen Overlay (Start/Game Over) -->
+                <div id="mg-screen-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-20">
+                    <h4 id="mg-title" class="text-2xl font-black text-white font-heading mb-2">Flappy Yogurt</h4>
+                    <p id="mg-desc" class="text-xs text-gray-300 max-w-xs mb-4">Лети на заряженном йогурте через препятствия с комфортной скоростью!</p>
+                    <div id="mg-reward-box" class="hidden mb-4 p-3 rounded-xl liquid-glass text-xs text-emerald-300 font-bold"></div>
+                    <button id="mg-start-btn" onclick="minigames.startCurrentGame()" class="liquid-btn-accent px-8 py-3 rounded-2xl font-bold text-sm text-white shadow-[0_0_20px_rgba(236,72,153,0.6)]">
+                        НАЧАТЬ ИГРУ
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 5. CHAT MODAL (MINNIT IFRAME)              -->
+    <!-- ========================================== -->
+    <div id="chat-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 md:p-6 pointer-events-auto">
+        <div class="liquid-glass-dark rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col border border-pink-500/30 overflow-hidden relative shadow-2xl">
+            <div class="p-3 border-b border-white/10 flex justify-between items-center bg-black/40">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">💬</span>
+                    <span class="font-bold text-sm text-white">Чат игроков Yogurt Clicker</span>
+                </div>
+                <button id="close-chat" class="liquid-pill w-8 h-8 rounded-xl flex items-center justify-center text-gray-300 hover:text-white text-xl">&times;</button>
+            </div>
+            <div class="flex-1 w-full h-full bg-white">
+                <iframe src="https://organizations.minnit.chat/756857056139661/Main" style="border:none;width:100%;height:100%;" allowTransparency="true"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 6. JAVASCRIPT GAME & 3D ENGINE LOGIC       -->
+    <!-- ========================================== -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- AUDIO ENGINE (LO-FI SYNTH & AUTHENTIC GULP SOUND) ---
+        class AudioManager {
+            constructor() {
+                this.ctx = null;
+                this.musicEnabled = true;
+                this.sfxEnabled = true;
+                this.lofiInterval = null;
+                this.beatStep = 0;
+                
+                this.params = {
+                    tempo: 0,
+                    bass: 0,
+                    vinyl: 0,
+                    chords: 0,
+                    reverb: 0
+                };
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            updateParam(key, val) {
+                this.params[key] = parseFloat(val);
+                const el = document.getElementById(`lofi-val-${key}`);
+                if (el) el.innerText = val > 0 ? `+${val}` : val;
+                
+                if (key === 'tempo' && this.musicEnabled) {
+                    this.startLoFi();
+                }
+            }
+
+            toggleMusic() {
+                this.init();
+                this.musicEnabled = !this.musicEnabled;
+                const icon = document.getElementById('music-toggle-btn');
+                if (this.musicEnabled) {
+                    icon.classList.add('bg-pink-600/40', 'border-pink-400');
+                    this.startLoFi();
+                } else {
+                    icon.classList.remove('bg-pink-600/40', 'border-pink-400');
+                    this.stopLoFi();
+                }
+                return this.musicEnabled;
+            }
+
+            toggleSFX() {
+                this.sfxEnabled = !this.sfxEnabled;
+                const btn = document.getElementById('sfx-toggle-btn');
+                if (this.sfxEnabled) {
+                    btn.classList.remove('opacity-50');
+                } else {
+                    btn.classList.add('opacity-50');
+                }
+                return this.sfxEnabled;
+            }
+
+            startLoFi() {
+                this.init();
+                if (this.lofiInterval) clearInterval(this.lofiInterval);
+                
+                const chords = [
+                    [293.66, 349.23, 440.00, 523.25, 659.25], // Dm9
+                    [196.00, 329.63, 392.00, 493.88, 659.25], // G13
+                    [261.63, 329.63, 392.00, 493.88, 587.33], // Cmaj7
+                    [220.00, 261.63, 329.63, 392.00, 493.88]  // Am9
+                ];
+                let chordIndex = 0;
+
+                const tempoFactor = 1 - (this.params.tempo * 0.035);
+                const stepTime = Math.max(380, Math.min(1000, 650 * tempoFactor));
+
+                this.lofiInterval = setInterval(() => {
+                    if (!this.musicEnabled || !this.ctx) return;
+                    
+                    if (this.beatStep % 4 === 0) {
+                        const currentChord = chords[chordIndex % chords.length];
+                        chordIndex++;
+                        this.playWarmChord(currentChord);
+                    }
+
+                    if (this.beatStep % 4 === 0 || this.beatStep % 4 === 2) {
+                        this.playSoftKick();
+                    } else {
+                        this.playSoftBrushSnare();
+                    }
+
+                    if (Math.random() < 0.4) {
+                        this.playVinylPop();
+                    }
+
+                    this.beatStep++;
+                }, stepTime);
+            }
+
+            stopLoFi() {
+                if (this.lofiInterval) {
+                    clearInterval(this.lofiInterval);
+                    this.lofiInterval = null;
+                }
+            }
+
+            playWarmChord(freqs) {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const chordGainFactor = Math.max(0.01, 0.04 + (this.params.chords * 0.003));
+                const filterBase = Math.max(250, 480 + (this.params.chords * 25));
+                const decayTime = Math.max(1.2, 2.6 + (this.params.reverb * 0.1));
+
+                freqs.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(filterBase + idx * 70, now);
+
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(chordGainFactor, now + 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + decayTime);
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + decayTime + 0.1);
+                });
+            }
+
+            playSoftKick() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                const bassBoost = 1 + (this.params.bass * 0.06);
+                osc.frequency.setValueAtTime(115, now);
+                osc.frequency.exponentialRampToValueAtTime(32, now + 0.22);
+
+                gain.gain.setValueAtTime(0.07 * bassBoost, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.26);
+            }
+
+            playSoftBrushSnare() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const bufferSize = this.ctx.sampleRate * 0.09;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 1300;
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.025, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noise.start(now);
+                noise.stop(now + 0.1);
+            }
+
+            playVinylPop() {
+                if (!this.ctx) return;
+                const vinylVolume = Math.max(0, 0.015 + (this.params.vinyl * 0.002));
+                if (vinylVolume <= 0) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800 + Math.random() * 1200, now);
+                gain.gain.setValueAtTime(vinylVolume, now);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.035);
+            }
+
+            playTap() {
+                if (!this.sfxEnabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320 + Math.random() * 80, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.08);
+
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.09);
+            }
+
+            playErupt(type) {
+                if (!this.sfxEnabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(190, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.4);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.45);
+
+                if (type === 'nuclear' || type === 'rainbow') {
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                        const cOsc = this.ctx.createOscillator();
+                        const cGain = this.ctx.createGain();
+                        cOsc.frequency.setValueAtTime(freq, now + i * 0.06);
+                        cGain.gain.setValueAtTime(0.08, now + i * 0.06);
+                        cGain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.06 + 0.3);
+                        cOsc.connect(cGain);
+                        cGain.connect(this.ctx.destination);
+                        cOsc.start(now + i * 0.06);
+                        cOsc.stop(now + i * 0.06 + 0.35);
+                    });
+                }
+            }
+
+            // AUTHENTIC LIQUID GULP / SWALLOW SOUND
+            playGulp() {
+                if (!this.sfxEnabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+
+                // Stage 1: Liquid squelch / intake
+                const osc1 = this.ctx.createOscillator();
+                const gain1 = this.ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(260, now);
+                osc1.frequency.exponentialRampToValueAtTime(480, now + 0.12);
+                gain1.gain.setValueAtTime(0.08, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                osc1.connect(gain1);
+                gain1.connect(this.ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.15);
+
+                // Stage 2: Deep resonant throat "GLUG / GULP"
+                const osc2 = this.ctx.createOscillator();
+                const gain2 = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(320, now + 0.12);
+                osc2.frequency.exponentialRampToValueAtTime(95, now + 0.38);
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(350, now + 0.12);
+                filter.Q.value = 4.0; // Resonant throat chamber
+
+                gain2.gain.setValueAtTime(0, now + 0.12);
+                gain2.gain.linearRampToValueAtTime(0.18, now + 0.18);
+                gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+
+                osc2.connect(filter);
+                filter.connect(gain2);
+                gain2.connect(this.ctx.destination);
+                osc2.start(now + 0.12);
+                osc2.stop(now + 0.45);
+            }
+
+            playChime() {
+                if (!this.sfxEnabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.exponentialRampToValueAtTime(1320, now + 0.12);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+        }
+
+        const audioManager = new AudioManager();
+        window.audioManager = audioManager;
+
+        // --- SKINS DATA ---
+        const SKINS_DATA = {
+            'default': { name: 'Классический', cost: 0, currency: 'money', mult: 1.0, color: 0xffffff, roughness: 0.15, metalness: 0.05 },
+            'pinky': { name: 'Pinky Glow', cost: 2500, currency: 'money', mult: 1.15, color: 0xff4d94, roughness: 0.12, metalness: 0.1 },
+            'lime': { name: 'Cyber Lime', cost: 12000, currency: 'money', mult: 1.35, color: 0xa6ff00, roughness: 0.1, metalness: 0.2 },
+            'dark': { name: 'Obsidian Dark', cost: 50000, currency: 'money', mult: 1.6, color: 0x1a1a24, roughness: 0.08, metalness: 0.8 },
+            
+            'sapphire': { name: 'Сапфир Reborn', cost: 8, currency: 'gem', mult: 2.2, color: 0x0a66c2, roughness: 0.05, metalness: 0.4 },
+            'emerald': { name: 'Изумрудный Блик', cost: 20, currency: 'gem', mult: 3.5, color: 0x10b981, roughness: 0.05, metalness: 0.5 },
+            'diamond': { name: 'Алмазный Кристалл', cost: 45, currency: 'gem', mult: 5.5, color: 0xc4f1f9, roughness: 0.02, metalness: 0.7 },
+            'gold': { name: 'Королевское Золото', cost: 90, currency: 'gem', mult: 8.0, color: 0xf59e0b, roughness: 0.1, metalness: 0.95 },
+            
+            'amethyst': { name: 'Аметистовая Призма', cost: 2, currency: 'star', mult: 12.0, color: 0x9333ea, roughness: 0.05, metalness: 0.6 },
+            'nebula': { name: 'Космическая Туманность', cost: 8, currency: 'star', mult: 18.0, color: 0x4f46e5, roughness: 0.1, metalness: 0.4 },
+            'sun': { name: 'Солнечная Вспышка', cost: 18, currency: 'star', mult: 26.0, color: 0xf97316, roughness: 0.15, metalness: 0.3 },
+            'ruby': { name: 'Кровавый Рубин', cost: 35, currency: 'star', mult: 38.0, color: 0xe11d48, roughness: 0.02, metalness: 0.6 },
+            
+            'toxic': { name: 'Токсичный Неон', cost: 4, currency: 'flask', mult: 55.0, color: 0x22c55e, roughness: 0.1, metalness: 0.3 },
+            'nuclear': { name: 'Ядерный Реактор', cost: 10, currency: 'flask', mult: 80.0, color: 0x39ff14, roughness: 0.05, metalness: 0.5 },
+            'plasma': { name: 'Квантовая Плазма', cost: 25, currency: 'flask', mult: 120.0, color: 0xd946ef, roughness: 0.05, metalness: 0.8 },
+            'magma': { name: 'Лавовый Магматик', cost: 45, currency: 'flask', mult: 180.0, color: 0xff3b00, roughness: 0.25, metalness: 0.4 },
+            'ice': { name: 'Абсолютный Ноль', cost: 90, currency: 'flask', mult: 250.0, color: 0x7dd3fc, roughness: 0.01, metalness: 0.3 },
+            'antimatter': { name: 'Антиматерия', cost: 200, currency: 'flask', mult: 360.0, color: 0x050508, roughness: 0.3, metalness: 0.9 },
+            
+            'void': { name: 'Черная Дыра', cost: 150, currency: 'orb', mult: 550.0, color: 0x020204, roughness: 0.01, metalness: 1.0 },
+            'mystic': { name: 'Мистическая Сингулярность', cost: 400, currency: 'orb', mult: 1200.0, color: 0xa855f7, roughness: 0.05, metalness: 0.9 }
+        };
+
+        // --- HAND SKINS ---
+        const HAND_SKINS = {
+            'default': { name: 'Анатомическая Кисть', cost: 0, currency: 'money', mult: 1.0, color: 0xf6c5a5, metalness: 0.0, roughness: 0.35 },
+            'cyber': { name: 'Кибернетический Хром', cost: 25, currency: 'gem', mult: 1.6, color: 0xd1d5db, metalness: 0.92, roughness: 0.1, emissive: 0x06b6d4 },
+            'midas': { name: 'Золото Мидаса', cost: 5, currency: 'star', mult: 2.8, color: 0xf59e0b, metalness: 0.98, roughness: 0.1 },
+            'bone': { name: 'Костяной Демон', cost: 15, currency: 'flask', mult: 4.5, color: 0x27272a, metalness: 0.4, roughness: 0.5, emissive: 0xef4444 },
+            'magma': { name: 'Лавовая Перчатка', cost: 30, currency: 'flask', mult: 8.0, color: 0x7f1d1d, metalness: 0.2, roughness: 0.6, emissive: 0xf97316 },
+            'glass': { name: 'Liquid Glass (iOS26)', cost: 50, currency: 'orb', mult: 15.0, color: 0xffffff, metalness: 0.1, roughness: 0.02, transmission: 0.9 }
+        };
+
+        // --- HUMAN FACES WITH FULL ORAL CAVITY ---
+        const FACES_DATA = {
+            'boy': { name: 'Студент', cost: 35000, currency: 'money', mult: 1.25, hairColor: 0x271e1b, isBoy: true },
+            'girl1': { name: 'Аниме-Девушка', cost: 30, currency: 'gem', mult: 2.2, hairColor: 0xfde047, isBoy: false, bustScale: 0.7, clothingColor: 0x38bdf8 },
+            'girl2': { name: 'Брюнетка Элеганс', cost: 10, currency: 'star', mult: 4.5, hairColor: 0x1f1610, isBoy: false, bustScale: 0.95, clothingColor: 0xf43f5e },
+            'girl3': { name: 'Рыжая Модель', cost: 20, currency: 'flask', mult: 10.0, hairColor: 0xea580c, isBoy: false, bustScale: 1.15, clothingColor: 0x10b981 },
+            'girl4': { name: 'Платиновая Королева', cost: 35, currency: 'orb', mult: 30.0, hairColor: 0xf1f5f9, isBoy: false, bustScale: 1.35, clothingColor: 0xa855f7 }
+        };
+
+        // --- 10 HIGH-QUALITY 3D ROOMS ---
+        const ROOMS_DATA = [
+            { id: 0, name: 'Студия стекла', cost: 0, currency: 'money', desc: 'Стеклянный павильон, каустические панели, сияющий купол неба и солнце.' },
+            { id: 1, name: 'Геймерская комната', cost: 20000, currency: 'money', desc: 'RGB-ленты, геймерский стол, мониторы, ПК и неоновые акценты.' },
+            { id: 2, name: 'Пентхаус над городом', cost: 25, currency: 'gem', desc: 'Панорамные окна с детализированным ночным мегаполисом и звездами.' },
+            { id: 3, name: 'Улица Киберпанка', cost: 75, currency: 'gem', desc: 'Мокрый асфальт, свисающие провода, пар и японский неон.' },
+            { id: 4, name: 'Мраморный Пантеон', cost: 5, currency: 'star', desc: 'Античные мраморные колонны, золотые чаши с огнем и лучи солнца.' },
+            { id: 5, name: 'Золотой Дворец', cost: 20, currency: 'star', desc: 'Королевский бархат, золотые своды и хрустальная люстра.' },
+            { id: 6, name: 'Орбитальная Станция', cost: 10, currency: 'flask', desc: 'Панорамный купол корабля, звезды и светящаяся Земля.' },
+            { id: 7, name: 'Глубоководный Биом', cost: 30, currency: 'flask', desc: 'Затонувший храм, светящиеся кораллы и каустические волны.' },
+            { id: 8, name: 'Вулканическая Кузница', cost: 20, currency: 'orb', desc: 'Базальтовые скалы, кипящая лава и летающие искры.' },
+            { id: 9, name: 'Большой Кремлёвский Зал', cost: 100, currency: 'orb', desc: 'Красная площадь, кремлёвские зубцы, Спасская башня, рубиновая звезда и люстры!' }
+        ];
+
+        const CURRENCY_MAP = {
+            'money': { prop: 'money', icon: '💧', name: 'Йогурт' },
+            'gem': { prop: 'gems', icon: '💎', name: 'Гем' },
+            'star': { prop: 'stars', icon: '⭐', name: 'Звезда' },
+            'flask': { prop: 'flasks', icon: '🧪', name: 'Колба' },
+            'orb': { prop: 'orbs', icon: '🔮', name: 'Сфера' }
+        };
+
+        const REBORN_SAVE_KEY = 'yogurt_clicker_reborn_save_v4';
+
+        // --- GAME CONTROLLER & LOGIC ---
+        class Game {
+            constructor() {
+                this.state = {
+                    money: 0,
+                    gems: 0,
+                    stars: 0,
+                    flasks: 0,
+                    orbs: 0,
+                    rebirths: 0,
+                    currentProgress: 0,
+                    unlockedSkins: ['default'],
+                    equippedSkin: 'default',
+                    unlockedHands: ['default'],
+                    equippedHand: 'default',
+                    unlockedFaces: [],
+                    equippedFace: null,
+                    unlockedRooms: [0],
+                    equippedRoom: 0,
+                    ultraGraphics: true
+                };
+
+                this.clickHistory = [];
+                this.isOverheated = false;
+
+                this.load();
+
+                this.ui = {
+                    money: document.getElementById('money-display'),
+                    gems: document.getElementById('gems-display'),
+                    stars: document.getElementById('stars-display'),
+                    flasks: document.getElementById('flasks-display'),
+                    orbs: document.getElementById('orbs-display'),
+                    rebirth: document.getElementById('rebirth-display'),
+                    multiplier: document.getElementById('multiplier-display'),
+                    progress: document.getElementById('progress-display'),
+                    rebirthCost: document.getElementById('rebirth-cost'),
+                    rebirthMultVal: document.getElementById('rebirth-mult-val'),
+                    currentRoomName: document.getElementById('current-room-name'),
+                    overheatBadge: document.getElementById('overheat-badge'),
+                    menu: document.getElementById('side-menu'),
+                    menuOverlay: document.getElementById('menu-overlay'),
+                    menuBtn: document.getElementById('menu-btn'),
+                    closeMenu: document.getElementById('close-menu'),
+                    skinsList: document.getElementById('skins-list'),
+                    handsList: document.getElementById('hands-list'),
+                    facesList: document.getElementById('faces-list'),
+                    roomsList: document.getElementById('rooms-list'),
+                    chatBtn: document.getElementById('chat-btn'),
+                    chatModal: document.getElementById('chat-modal'),
+                    closeChat: document.getElementById('close-chat'),
+                    minigamesBtn: document.getElementById('minigames-btn'),
+                    minigamesModal: document.getElementById('minigames-modal'),
+                    closeMinigames: document.getElementById('close-minigames'),
+                    tabs: {
+                        exchange: document.getElementById('tab-exchange'),
+                        skins: document.getElementById('tab-skins'),
+                        hands: document.getElementById('tab-hands'),
+                        faces: document.getElementById('tab-faces'),
+                        rooms: document.getElementById('tab-rooms'),
+                        settings: document.getElementById('tab-settings')
+                    },
+                    navBtns: {
+                        exchange: document.getElementById('nav-btn-exchange'),
+                        skins: document.getElementById('nav-btn-skins'),
+                        hands: document.getElementById('nav-btn-hands'),
+                        faces: document.getElementById('nav-btn-faces'),
+                        rooms: document.getElementById('nav-btn-rooms'),
+                        settings: document.getElementById('nav-btn-settings')
+                    }
+                };
+
+                this.initUI();
+                this.renderAllLists();
+                this.updateUI();
+
+                setInterval(() => this.save(), 3000);
+            }
+
+            save() {
+                try {
+                    localStorage.setItem(REBORN_SAVE_KEY, JSON.stringify(this.state));
+                } catch(e) {
+                    console.error("Save error", e);
+                }
+            }
+
+            load() {
+                const raw = localStorage.getItem(REBORN_SAVE_KEY);
+                if (raw) {
+                    try {
+                        const parsed = JSON.parse(raw);
+                        this.state = { ...this.state, ...parsed };
+                    } catch(e) {
+                        console.error("Corrupted save, resetting", e);
+                    }
+                }
+                if (this.state.currentProgress >= 10) this.state.currentProgress = 0;
+            }
+
+            resetProgress() {
+                if (confirm("Вы уверены, что хотите сбросить ВЕСЬ прогресс Reborn?")) {
+                    if (confirm("Это удалит все собранные валюты, купленные скины, лица и фоны!")) {
+                        localStorage.removeItem(REBORN_SAVE_KEY);
+                        ['peniGameS_universal_save', 'peniGameS_save_v2.2', 'peniGameS_save_v2', 'peniGameS_save'].forEach(k => localStorage.removeItem(k));
+                        location.reload();
+                    }
+                }
+            }
+
+            getRebirthMultiplier() {
+                return 1 + (this.state.rebirths * 0.20);
+            }
+
+            getSkinMultiplier() {
+                const s = SKINS_DATA[this.state.equippedSkin];
+                return s ? s.mult : 1.0;
+            }
+
+            getHandMultiplier() {
+                const h = HAND_SKINS[this.state.equippedHand];
+                return h ? h.mult : 1.0;
+            }
+
+            getFaceMultiplier() {
+                if (!this.state.equippedFace) return 1.0;
+                const f = FACES_DATA[this.state.equippedFace];
+                return f ? f.mult : 1.0;
+            }
+
+            getTotalMultiplier() {
+                return this.getRebirthMultiplier() * this.getSkinMultiplier() * this.getHandMultiplier() * this.getFaceMultiplier();
+            }
+
+            getRebirthCost() {
+                const base = 5000;
+                return Math.floor(base * Math.pow(1.5, this.state.rebirths));
+            }
+
+            getRebirthGemCost() {
+                return this.state.rebirths > 2 ? (this.state.rebirths - 2) * 5 : 0;
+            }
+
+            click() {
+                const now = performance.now();
+
+                this.clickHistory.push(now);
+                if (this.clickHistory.length > 8) this.clickHistory.shift();
+
+                if (this.clickHistory.length >= 6) {
+                    const timeSpan = now - this.clickHistory[0];
+                    const avgInterval = timeSpan / (this.clickHistory.length - 1);
+                    if (avgInterval < 45) {
+                        this.triggerOverheat();
+                        return;
+                    }
+                }
+
+                if (this.isOverheated) {
+                    audioManager.playTap();
+                    return;
+                }
+
+                this.state.currentProgress++;
+                audioManager.playTap();
+                if (navigator.vibrate) navigator.vibrate(12);
+
+                sceneManager.triggerHandStroke();
+
+                if (this.state.currentProgress >= 10) {
+                    this.state.currentProgress = 0;
+                    
+                    const luck = Math.random();
+                    let type = 'white';
+                    let baseReward = 80;
+
+                    if (luck < 0.01) { // 1% Nuclear
+                        type = 'nuclear';
+                        baseReward = 2500;
+                    } else if (luck < 0.05) { // 4% Rainbow
+                        type = 'rainbow';
+                        baseReward = 1200;
+                    } else if (luck < 0.15) { // 10% Yellow
+                        type = 'yellow';
+                        baseReward = 240;
+                    }
+
+                    const payout = Math.floor(baseReward * this.getTotalMultiplier());
+                    this.state.money += payout;
+                    
+                    if (type === 'rainbow') {
+                        this.showFloatingText(`🌈 РАДУЖНЫЙ ДЖЕКПОТ! +${payout.toLocaleString()} 💧`, 'rainbow');
+                    } else {
+                        this.showFloatingText(`+${payout.toLocaleString()} 💧`, type);
+                    }
+
+                    audioManager.playErupt(type);
+                    if (navigator.vibrate) navigator.vibrate([30, 20, 60]);
+
+                    sceneManager.erupt(type);
+                    sceneManager.pulseBalls(true);
+
+                    if (this.state.equippedFace) {
+                        sceneManager.triggerFaceEat(type);
+                    }
+
+                } else {
+                    sceneManager.pulseBalls(false);
+                    const miniReward = Math.max(1, Math.floor(2 * this.getTotalMultiplier()));
+                    this.state.money += miniReward;
+                    if (Math.random() < 0.3) {
+                        this.showFloatingText(`+${miniReward} 💧`, 'mini');
+                    }
+                }
+
+                this.updateUI();
+                this.save();
+            }
+
+            triggerOverheat() {
+                if (this.isOverheated) return;
+                this.isOverheated = true;
+                this.ui.overheatBadge.classList.remove('hidden');
+                sceneManager.setBallsOverheat(true);
+
+                let timeLeft = 2.2;
+                const coolTimer = setInterval(() => {
+                    timeLeft -= 0.1;
+                    const coolRatio = Math.max(0, timeLeft / 2.2);
+                    sceneManager.updateBallsCooldown(coolRatio);
+
+                    if (timeLeft <= 0) {
+                        clearInterval(coolTimer);
+                        this.isOverheated = false;
+                        this.ui.overheatBadge.classList.add('hidden');
+                        sceneManager.setBallsOverheat(false);
+                        this.clickHistory = [];
+                    }
+                }, 100);
+            }
+
+            showFloatingText(text, type) {
+                const container = document.getElementById('floating-container');
+                const el = document.createElement('div');
+                el.className = 'float-number';
+                el.innerText = text;
+
+                const offsetX = (window.innerWidth / 2) + (Math.random() * 220 - 110);
+                const offsetY = (window.innerHeight / 2) + (Math.random() * 160 - 80);
+                el.style.left = `${offsetX}px`;
+                el.style.top = `${offsetY}px`;
+
+                if (type === 'nuclear') {
+                    el.style.color = '#39ff14';
+                    el.style.fontSize = '24px';
+                } else if (type === 'rainbow') {
+                    el.style.color = '#f472b6';
+                    el.style.fontSize = '22px';
+                    el.style.textShadow = '0 0 15px rgba(244,114,182,0.8)';
+                } else if (type === 'yellow') {
+                    el.style.color = '#fbbf24';
+                    el.style.fontSize = '20px';
+                } else {
+                    el.style.color = '#ffffff';
+                    el.style.fontSize = '16px';
+                }
+
+                container.appendChild(el);
+                setTimeout(() => el.remove(), 1100);
+            }
+
+            exchange(type) {
+                let success = false;
+                if (type === 'gem' && this.state.money >= 15000) {
+                    this.state.money -= 15000;
+                    this.state.gems++;
+                    success = true;
+                } else if (type === 'star' && this.state.gems >= 120) {
+                    this.state.gems -= 120;
+                    this.state.stars++;
+                    success = true;
+                } else if (type === 'flask' && this.state.stars >= 15) {
+                    this.state.stars -= 15;
+                    this.state.flasks++;
+                    success = true;
+                } else if (type === 'orb' && this.state.flasks >= 15) {
+                    this.state.flasks -= 15;
+                    this.state.orbs++;
+                    success = true;
+                }
+
+                if (success) {
+                    audioManager.playChime();
+                    this.updateUI();
+                    this.save();
+                }
+            }
+
+            exchangeAll(type) {
+                let amount = 0;
+                if (type === 'gem') {
+                    amount = Math.floor(this.state.money / 15000);
+                    if (amount > 0) {
+                        this.state.money -= amount * 15000;
+                        this.state.gems += amount;
+                    }
+                } else if (type === 'star') {
+                    amount = Math.floor(this.state.gems / 120);
+                    if (amount > 0) {
+                        this.state.gems -= amount * 120;
+                        this.state.stars += amount;
+                    }
+                } else if (type === 'flask') {
+                    amount = Math.floor(this.state.stars / 15);
+                    if (amount > 0) {
+                        this.state.stars -= amount * 15;
+                        this.state.flasks += amount;
+                    }
+                } else if (type === 'orb') {
+                    amount = Math.floor(this.state.flasks / 15);
+                    if (amount > 0) {
+                        this.state.flasks -= amount * 15;
+                        this.state.orbs += amount;
+                    }
+                }
+                if (amount > 0) {
+                    audioManager.playChime();
+                    this.updateUI();
+                    this.save();
+                }
+            }
+
+            doRebirth() {
+                const costMoney = this.getRebirthCost();
+                const costGems = this.getRebirthGemCost();
+
+                if (this.state.money >= costMoney && this.state.gems >= costGems) {
+                    this.state.money = 0;
+                    this.state.gems -= costGems;
+                    this.state.rebirths++;
+                    this.state.currentProgress = 0;
+
+                    audioManager.playErupt('rainbow');
+                    this.showFloatingText(`🌀 ПЕРЕРОЖДЕНИЕ #${this.state.rebirths}!`, 'nuclear');
+
+                    this.updateUI();
+                    this.save();
+                }
+            }
+
+            buySkin(key) {
+                const item = SKINS_DATA[key];
+                const cur = CURRENCY_MAP[item.currency];
+                if (this.state[cur.prop] >= item.cost && !this.state.unlockedSkins.includes(key)) {
+                    this.state[cur.prop] -= item.cost;
+                    this.state.unlockedSkins.push(key);
+                    audioManager.playChime();
+                    this.equipSkin(key);
+                }
+            }
+
+            equipSkin(key) {
+                if (this.state.unlockedSkins.includes(key)) {
+                    this.state.equippedSkin = key;
+                    sceneManager.updateSkin(key);
+                    this.renderSkinsList();
+                    this.updateUI();
+                    this.save();
+                }
+            }
+
+            buyHand(key) {
+                const item = HAND_SKINS[key];
+                const cur = CURRENCY_MAP[item.currency];
+                if (this.state[cur.prop] >= item.cost && !this.state.unlockedHands.includes(key)) {
+                    this.state[cur.prop] -= item.cost;
+                    this.state.unlockedHands.push(key);
+                    audioManager.playChime();
+                    this.equipHand(key);
+                }
+            }
+
+            equipHand(key) {
+                if (this.state.unlockedHands.includes(key)) {
+                    this.state.equippedHand = key;
+                    sceneManager.updateHandSkin(key);
+                    this.renderHandsList();
+                    this.updateUI();
+                    this.save();
+                }
+            }
+
+            buyFace(key) {
+                const item = FACES_DATA[key];
+                const cur = CURRENCY_MAP[item.currency];
+                if (this.state[cur.prop] >= item.cost && !this.state.unlockedFaces.includes(key)) {
+                    this.state[cur.prop] -= item.cost;
+                    this.state.unlockedFaces.push(key);
+                    audioManager.playChime();
+                    this.equipFace(key);
+                }
+            }
+
+            equipFace(key) {
+                if (this.state.unlockedFaces.includes(key)) {
+                    this.state.equippedFace = (this.state.equippedFace === key) ? null : key;
+                    sceneManager.updateFace(this.state.equippedFace);
+                    this.renderFacesList();
+                    this.updateUI();
+                    this.save();
+                }
+            }
+
+            buyRoom(id) {
+                const item = ROOMS_DATA[id];
+                const cur = CURRENCY_MAP[item.currency];
+                if (this.state[cur.prop] >= item.cost && !this.state.unlockedRooms.includes(id)) {
+                    this.state[cur.prop] -= item.cost;
+                    this.state.unlockedRooms.push(id);
+                    audioManager.playChime();
+                    this.equipRoom(id);
+                }
+            }
+
+            equipRoom(id) {
+                if (this.state.unlockedRooms.includes(id)) {
+                    this.state.equippedRoom = id;
+                    sceneManager.loadRoom(id);
+                    this.ui.currentRoomName.innerText = ROOMS_DATA[id].name;
+                    this.renderRoomsList();
+                    this.updateUI();
+                    this.save();
+                }
+            }
+
+            setGraphicsMode(ultra) {
+                this.state.ultraGraphics = ultra;
+                sceneManager.setUltraGraphics(ultra);
+                document.getElementById('opt-btn-eco').classList.toggle('active', !ultra);
+                document.getElementById('opt-btn-ultra').classList.toggle('active', ultra);
+                this.save();
+            }
+
+            switchTab(tabName) {
+                Object.values(this.ui.tabs).forEach(el => el.classList.remove('active'));
+                Object.values(this.ui.navBtns).forEach(el => el.classList.remove('active'));
+
+                if (this.ui.tabs[tabName]) this.ui.tabs[tabName].classList.add('active');
+                if (this.ui.navBtns[tabName]) this.ui.navBtns[tabName].classList.add('active');
+            }
+
+            renderSkinsList() {
+                const list = this.ui.skinsList;
+                list.innerHTML = '';
+                Object.keys(SKINS_DATA).forEach(key => {
+                    const skin = SKINS_DATA[key];
+                    const isUnlocked = this.state.unlockedSkins.includes(key);
+                    const isEquipped = this.state.equippedSkin === key;
+                    const cur = CURRENCY_MAP[skin.currency];
+                    
+                    const div = document.createElement('div');
+                    div.className = `p-2.5 rounded-2xl liquid-glass flex justify-between items-center ${isEquipped ? 'border border-pink-500/60 shadow-[0_0_15px_rgba(236,72,153,0.3)]' : ''}`;
+                    
+                    let action = '';
+                    if (isEquipped) {
+                        action = `<span class="text-xs text-pink-400 font-bold px-3 py-1 liquid-pill">Надето</span>`;
+                    } else if (isUnlocked) {
+                        action = `<button onclick="game.equipSkin('${key}')" class="liquid-pill px-3 py-1 text-xs text-white hover:text-pink-300 font-bold">Выбрать</button>`;
+                    } else {
+                        const canAfford = this.state[cur.prop] >= skin.cost;
+                        action = `<button onclick="game.buySkin('${key}')" class="${canAfford ? 'liquid-btn-accent text-white' : 'liquid-pill opacity-50 cursor-not-allowed text-gray-400'} text-xs px-3 py-1.5 rounded-xl font-bold">${skin.cost.toLocaleString()} ${cur.icon}</button>`;
+                    }
+
+                    div.innerHTML = `
+                        <div>
+                            <div class="text-xs md:text-sm font-bold text-white flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full border border-white/40" style="background-color: #${skin.color.toString(16).padStart(6, '0')}"></span>
+                                ${skin.name}
+                            </div>
+                            <div class="text-[11px] text-pink-300 font-mono">Множитель: x${skin.mult}</div>
+                        </div>
+                        ${action}
+                    `;
+                    list.appendChild(div);
+                });
+            }
+
+            renderHandsList() {
+                const list = this.ui.handsList;
+                list.innerHTML = '';
+                Object.keys(HAND_SKINS).forEach(key => {
+                    const hand = HAND_SKINS[key];
+                    const isUnlocked = this.state.unlockedHands.includes(key);
+                    const isEquipped = this.state.equippedHand === key;
+                    const cur = CURRENCY_MAP[hand.currency];
+                    
+                    const div = document.createElement('div');
+                    div.className = `p-2.5 rounded-2xl liquid-glass flex justify-between items-center ${isEquipped ? 'border border-cyan-500/60 shadow-[0_0_15px_rgba(6,182,212,0.3)]' : ''}`;
+                    
+                    let action = '';
+                    if (isEquipped) {
+                        action = `<span class="text-xs text-cyan-400 font-bold px-3 py-1 liquid-pill">Надето</span>`;
+                    } else if (isUnlocked) {
+                        action = `<button onclick="game.equipHand('${key}')" class="liquid-pill px-3 py-1 text-xs text-white hover:text-cyan-300 font-bold">Выбрать</button>`;
+                    } else {
+                        const canAfford = this.state[cur.prop] >= hand.cost;
+                        action = `<button onclick="game.buyHand('${key}')" class="${canAfford ? 'liquid-btn-accent text-white' : 'liquid-pill opacity-50 cursor-not-allowed text-gray-400'} text-xs px-3 py-1.5 rounded-xl font-bold">${hand.cost.toLocaleString()} ${cur.icon}</button>`;
+                    }
+
+                    div.innerHTML = `
+                        <div>
+                            <div class="text-xs md:text-sm font-bold text-white flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full border border-white/40" style="background-color: #${hand.color.toString(16).padStart(6, '0')}"></span>
+                                ${hand.name}
+                            </div>
+                            <div class="text-[11px] text-cyan-300 font-mono">Бонус кисти: x${hand.mult}</div>
+                        </div>
+                        ${action}
+                    `;
+                    list.appendChild(div);
+                });
+            }
+
+            renderFacesList() {
+                const list = this.ui.facesList;
+                list.innerHTML = '';
+                Object.keys(FACES_DATA).forEach(key => {
+                    const face = FACES_DATA[key];
+                    const isUnlocked = this.state.unlockedFaces.includes(key);
+                    const isEquipped = this.state.equippedFace === key;
+                    const cur = CURRENCY_MAP[face.currency];
+                    
+                    const div = document.createElement('div');
+                    div.className = `p-2.5 rounded-2xl liquid-glass flex justify-between items-center ${isEquipped ? 'border border-amber-500/60 shadow-[0_0_15px_rgba(245,158,11,0.3)]' : ''}`;
+                    
+                    let action = '';
+                    if (isEquipped) {
+                        action = `<button onclick="game.equipFace('${key}')" class="text-xs text-amber-400 font-bold px-3 py-1 liquid-pill">Снять</button>`;
+                    } else if (isUnlocked) {
+                        action = `<button onclick="game.equipFace('${key}')" class="liquid-pill px-3 py-1 text-xs text-white hover:text-amber-300 font-bold">Выбрать</button>`;
+                    } else {
+                        const canAfford = this.state[cur.prop] >= face.cost;
+                        action = `<button onclick="game.buyFace('${key}')" class="${canAfford ? 'liquid-btn-accent text-white' : 'liquid-pill opacity-50 cursor-not-allowed text-gray-400'} text-xs px-3 py-1.5 rounded-xl font-bold">${face.cost.toLocaleString()} ${cur.icon}</button>`;
+                    }
+
+                    div.innerHTML = `
+                        <div>
+                            <div class="text-xs md:text-sm font-bold text-white">${face.name}</div>
+                            <div class="text-[11px] text-amber-300 font-mono">Множитель поглощения: x${face.mult}</div>
+                        </div>
+                        ${action}
+                    `;
+                    list.appendChild(div);
+                });
+            }
+
+            renderRoomsList() {
+                const list = this.ui.roomsList;
+                list.innerHTML = '';
+                ROOMS_DATA.forEach(room => {
+                    const isUnlocked = this.state.unlockedRooms.includes(room.id);
+                    const isEquipped = this.state.equippedRoom === room.id;
+                    const cur = CURRENCY_MAP[room.currency];
+                    
+                    const div = document.createElement('div');
+                    div.className = `p-2.5 rounded-2xl liquid-glass flex justify-between items-center ${isEquipped ? 'border border-purple-500/60 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : ''}`;
+                    
+                    let action = '';
+                    if (isEquipped) {
+                        action = `<span class="text-xs text-purple-400 font-bold px-3 py-1 liquid-pill">Активно</span>`;
+                    } else if (isUnlocked) {
+                        action = `<button onclick="game.equipRoom(${room.id})" class="liquid-pill px-3 py-1 text-xs text-white hover:text-purple-300 font-bold">Выбрать</button>`;
+                    } else {
+                        const canAfford = this.state[cur.prop] >= room.cost;
+                        action = `<button onclick="game.buyRoom(${room.id})" class="${canAfford ? 'liquid-btn-accent text-white' : 'liquid-pill opacity-50 cursor-not-allowed text-gray-400'} text-xs px-3 py-1.5 rounded-xl font-bold">${room.cost.toLocaleString()} ${cur.icon}</button>`;
+                    }
+
+                    div.innerHTML = `
+                        <div class="max-w-[70%]">
+                            <div class="text-xs md:text-sm font-bold text-white">${room.name}</div>
+                            <div class="text-[10px] text-gray-400 leading-tight">${room.desc}</div>
+                        </div>
+                        ${action}
+                    `;
+                    list.appendChild(div);
+                });
+            }
+
+            renderAllLists() {
+                this.renderSkinsList();
+                this.renderHandsList();
+                this.renderFacesList();
+                this.renderRoomsList();
+            }
+
+            initUI() {
+                const openMenu = () => {
+                    this.ui.menu.style.transform = "translateX(0)";
+                    this.ui.menuOverlay.classList.remove('hidden');
+                    this.renderAllLists();
+                    this.updateRebirthUI();
+                };
+
+                const closeMenu = () => {
+                    this.ui.menu.style.transform = "translateX(-100%)";
+                    this.ui.menuOverlay.classList.add('hidden');
+                };
+
+                this.ui.menuBtn.onclick = openMenu;
+                this.ui.closeMenu.onclick = closeMenu;
+                this.ui.menuOverlay.onclick = closeMenu;
+
+                this.ui.chatBtn.onclick = () => this.ui.chatModal.classList.remove('hidden');
+                this.ui.closeChat.onclick = () => this.ui.chatModal.classList.add('hidden');
+                this.ui.chatModal.onclick = (e) => {
+                    if (e.target === this.ui.chatModal) this.ui.chatModal.classList.add('hidden');
+                };
+
+                this.ui.minigamesBtn.onclick = () => {
+                    this.ui.minigamesModal.classList.remove('hidden');
+                    minigames.init();
+                };
+                this.ui.closeMinigames.onclick = () => {
+                    this.ui.minigamesModal.classList.add('hidden');
+                    minigames.stop();
+                };
+                this.ui.minigamesModal.onclick = (e) => {
+                    if (e.target === this.ui.minigamesModal) {
+                        this.ui.minigamesModal.classList.add('hidden');
+                        minigames.stop();
+                    }
+                };
+
+                document.getElementById('music-toggle-btn').onclick = () => audioManager.toggleMusic();
+                document.getElementById('sfx-toggle-btn').onclick = () => audioManager.toggleSFX();
+
+                document.getElementById('start-game-btn').onclick = () => {
+                    audioManager.init();
+                    if (audioManager.musicEnabled) {
+                        audioManager.startLoFi();
+                        document.getElementById('music-toggle-btn').classList.add('bg-pink-600/40', 'border-pink-400');
+                    }
+                    const lScreen = document.getElementById('loading-screen');
+                    if (lScreen) {
+                        lScreen.style.opacity = "0";
+                        setTimeout(() => lScreen.remove(), 1000);
+                    }
+                };
+
+                setTimeout(() => {
+                    const lBar = document.getElementById('loading-bar');
+                    if (lBar) lBar.style.width = "100%";
+                }, 100);
+            }
+
+            updateRebirthUI() {
+                const costMoney = this.getRebirthCost();
+                const costGems = this.getRebirthGemCost();
+                let txt = `${costMoney.toLocaleString()} 💧`;
+                if (costGems > 0) txt += ` + ${costGems} 💎`;
+                this.ui.rebirthCost.innerText = txt;
+                this.ui.rebirthMultVal.innerText = `x${this.getRebirthMultiplier().toFixed(2)}`;
+            }
+
+            updateUI() {
+                this.ui.money.innerText = this.state.money.toLocaleString();
+                this.ui.gems.innerText = this.state.gems.toLocaleString();
+                this.ui.stars.innerText = this.state.stars.toLocaleString();
+                this.ui.flasks.innerText = this.state.flasks.toLocaleString();
+                this.ui.orbs.innerText = this.state.orbs.toLocaleString();
+                this.ui.rebirth.innerText = this.state.rebirths;
+                this.ui.multiplier.innerText = this.getTotalMultiplier().toFixed(2);
+                this.ui.progress.innerText = `${this.state.currentProgress}/10`;
+                this.updateRebirthUI();
+            }
+        }
+
+        const game = new Game();
+        window.game = game;
+
+        // --- THREE.JS SCENE & 3D ENGINE ---
+        class SceneManager {
+            constructor() {
+                this.canvas = document.getElementById('game-canvas');
+                this.scene = new THREE.Scene();
+
+                this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.camera.position.set(0, 3.4, 11.5);
+                this.camera.lookAt(0, 2.0, 0);
+
+                this.renderer = new THREE.WebGLRenderer({
+                    canvas: this.canvas,
+                    alpha: true,
+                    antialias: true,
+                    powerPreference: 'high-performance'
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                this.renderer.toneMappingExposure = 1.15;
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+                this.controls = new OrbitControls(this.camera, this.canvas);
+                this.controls.enableDamping = true;
+                this.controls.dampingFactor = 0.05;
+                this.controls.enableZoom = true;
+                this.controls.minDistance = 5;
+                this.controls.maxDistance = 22;
+                this.controls.target.set(0, 2.0, 0);
+
+                // Sky Dome & Sun Light
+                this.setupSkyAndSun();
+                this.setupLighting();
+
+                this.roomGroup = new THREE.Group();
+                this.scene.add(this.roomGroup);
+
+                // Yogurt Core Model
+                this.yogurtGroup = new THREE.Group();
+                this.scene.add(this.yogurtGroup);
+                this.setupYogurtModel();
+
+                // Seamless Sculpted Hand Attempting to Grasp
+                this.handGroup = new THREE.Group();
+                this.scene.add(this.handGroup);
+                this.setupHandModel();
+
+                // Faces Container with Oral Cavity & Face Splats
+                this.faceGroup = new THREE.Group();
+                this.scene.add(this.faceGroup);
+                this.faceParts = {};
+                this.faceEatAnim = { active: false, time: 0 };
+                this.faceSplats = []; // Droplets sticking to the human!
+
+                this.particles = [];
+                this.puddles = []; // Lingering liquid puddles on the floor
+                this.clock = new THREE.Clock();
+
+                window.addEventListener('resize', () => this.onWindowResize(), false);
+                let isDragging = false;
+                this.canvas.addEventListener('mousedown', () => isDragging = false);
+                this.canvas.addEventListener('mousemove', () => isDragging = true);
+                this.canvas.addEventListener('mouseup', () => { if (!isDragging) game.click(); });
+                this.canvas.addEventListener('touchstart', () => isDragging = false);
+                this.canvas.addEventListener('touchmove', () => isDragging = true);
+                this.canvas.addEventListener('touchend', (e) => { e.preventDefault(); if (!isDragging) game.click(); });
+
+                setTimeout(() => {
+                    this.updateSkin(game.state.equippedSkin);
+                    this.updateHandSkin(game.state.equippedHand);
+                    this.updateFace(game.state.equippedFace);
+                    this.loadRoom(game.state.equippedRoom);
+                }, 100);
+
+                this.animate();
+            }
+
+            setupSkyAndSun() {
+                // Large Atmospheric Sky Dome
+                const skyGeo = new THREE.SphereGeometry(140, 32, 16);
+                this.skyMat = new THREE.MeshBasicMaterial({
+                    color: 0x070b19,
+                    side: THREE.BackSide
+                });
+                this.skyMesh = new THREE.Mesh(skyGeo, this.skyMat);
+                this.scene.add(this.skyMesh);
+
+                // Glowing Sun Sphere in the sky
+                const sunGeo = new THREE.SphereGeometry(5, 16, 16);
+                const sunMat = new THREE.MeshBasicMaterial({ color: 0xfff4d6 });
+                this.sunMesh = new THREE.Mesh(sunGeo, sunMat);
+                this.sunMesh.position.set(15, 35, -40);
+                this.scene.add(this.sunMesh);
+            }
+
+            setupLighting() {
+                this.hemiLight = new THREE.HemisphereLight(0xfff0fa, 0x181a28, 0.9);
+                this.scene.add(this.hemiLight);
+
+                this.dirLight = new THREE.DirectionalLight(0xfffaed, 1.8);
+                this.dirLight.position.set(15, 30, 20);
+                this.dirLight.castShadow = true;
+                this.dirLight.shadow.mapSize.width = 1024;
+                this.dirLight.shadow.mapSize.height = 1024;
+                this.dirLight.shadow.bias = -0.0005;
+                this.scene.add(this.dirLight);
+
+                this.rimLight = new THREE.DirectionalLight(0x38bdf8, 1.0);
+                this.rimLight.position.set(-10, 8, -8);
+                this.scene.add(this.rimLight);
+            }
+
+            setupYogurtModel() {
+                const bodyGeo = new THREE.CylinderGeometry(1, 1.2, 4, 32);
+                this.bodyMat = new THREE.MeshPhysicalMaterial({
+                    color: 0xffffff,
+                    roughness: 0.15,
+                    metalness: 0.05,
+                    clearcoat: 0.6,
+                    clearcoatRoughness: 0.1
+                });
+                this.yogurtBody = new THREE.Mesh(bodyGeo, this.bodyMat);
+                this.yogurtBody.position.y = 2;
+                this.yogurtBody.castShadow = true;
+                this.yogurtBody.receiveShadow = true;
+                this.yogurtGroup.add(this.yogurtBody);
+
+                // Dome Cap
+                const topGeo = new THREE.SphereGeometry(1, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.5);
+                this.topMat = new THREE.MeshStandardMaterial({ color: 0xec4899, roughness: 0.2, metalness: 0.1 });
+                this.yogurtTop = new THREE.Mesh(topGeo, this.topMat);
+                this.yogurtTop.position.y = 4;
+                this.yogurtTop.castShadow = true;
+                this.yogurtGroup.add(this.yogurtTop);
+
+                // Black Line
+                const lineGeo = new THREE.BoxGeometry(0.1, 0.05, 0.6);
+                const blackMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
+                const line = new THREE.Mesh(lineGeo, blackMat);
+                line.position.set(0, 5.0, 0);
+                this.yogurtGroup.add(line);
+
+                // Base Balls (Always matching the equipped skin!)
+                const ballGeo = new THREE.SphereGeometry(1, 32, 32);
+                this.ballMat = this.bodyMat.clone();
+                this.ballLeft = new THREE.Mesh(ballGeo, this.ballMat);
+                this.ballLeft.position.set(-1.3, 0.2, 0);
+                this.ballLeft.castShadow = true;
+                this.yogurtGroup.add(this.ballLeft);
+
+                this.ballRight = new THREE.Mesh(ballGeo, this.ballMat);
+                this.ballRight.position.set(1.3, 0.2, 0);
+                this.ballRight.castShadow = true;
+                this.yogurtGroup.add(this.ballRight);
+            }
+
+            setBallsOverheat(isHot) {
+                if (isHot) {
+                    this.ballMat.color.setHex(0xff1111);
+                    this.ballMat.emissive.setHex(0xff0000);
+                    this.ballMat.emissiveIntensity = 1.6;
+                } else {
+                    const skin = SKINS_DATA[game.state.equippedSkin];
+                    this.ballMat.color.setHex(skin.color);
+                    this.ballMat.emissive.setHex(0x000000);
+                    this.ballMat.emissiveIntensity = 0;
+                }
+            }
+
+            updateBallsCooldown(ratio) {
+                const skin = SKINS_DATA[game.state.equippedSkin];
+                const skinColor = new THREE.Color(skin.color);
+                const hotColor = new THREE.Color(1.0, 0.1, 0.1);
+                this.ballMat.color.copy(skinColor).lerp(hotColor, ratio);
+                this.ballMat.emissive.setHex(0xff0000);
+                this.ballMat.emissiveIntensity = ratio * 1.5;
+            }
+
+            // --- ORIGINAL HAND MODEL (EXACT REVERT TO ORIGINAL) ---
+            setupHandModel() {
+                this.handSkinMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
+
+                // Palm
+                const palmGeo = new THREE.BoxGeometry(1.6, 1.2, 0.4);
+                const palm = new THREE.Mesh(palmGeo, this.handSkinMat);
+                palm.position.set(0, 0, 1.4); 
+                this.handGroup.add(palm);
+
+                // Fingers
+                const fingerGeo = new THREE.CapsuleGeometry(0.13, 0.8, 4, 8);
+                const fingerAngles = [-35, -15, 15, 35];
+                
+                for(let i = 0; i < 4; i++) {
+                    const finger = new THREE.Mesh(fingerGeo, this.handSkinMat);
+                    const ang = fingerAngles[i] * (Math.PI / 180);
+                    const r = 1.25;
+                    const x = Math.sin(ang) * r;
+                    const z = Math.cos(ang) * r;
+                    finger.position.set(x, 0.8, z); 
+                    finger.rotation.x = -0.1;
+                    finger.rotation.y = ang; 
+                    this.handGroup.add(finger);
+                }
+
+                // Thumb
+                const thumbGeo = new THREE.CapsuleGeometry(0.15, 0.7, 4, 8);
+                const thumb = new THREE.Mesh(thumbGeo, this.handSkinMat);
+                thumb.position.set(0.9, 0.2, 0.9);
+                thumb.rotation.z = -0.6;
+                thumb.rotation.y = 0.8;
+                thumb.rotation.x = 0.3;
+                this.handGroup.add(thumb);
+                
+                // Knuckles
+                const knuckleGeo = new THREE.BoxGeometry(1.4, 0.4, 0.4);
+                const knuckles = new THREE.Mesh(knuckleGeo, this.handSkinMat);
+                knuckles.position.set(0, 0.6, 1.5);
+                this.handGroup.add(knuckles);
+
+                // Arm (Adjusted to connect to palm)
+                const armGeo = new THREE.CylinderGeometry(0.6, 0.7, 5, 16);
+                const armMesh = new THREE.Mesh(armGeo, this.handSkinMat);
+                armMesh.position.set(0, -2.0, 1.7); 
+                armMesh.rotation.x = 0.15; 
+                this.handGroup.add(armMesh);
+                
+                // Wrist connection filler
+                const wristGeo = new THREE.BoxGeometry(1.2, 0.8, 0.6);
+                const wrist = new THREE.Mesh(wristGeo, this.handSkinMat);
+                wrist.position.set(0, -0.6, 1.5);
+                wrist.rotation.x = 0.1;
+                this.handGroup.add(wrist);
+
+                this.handBasePos = new THREE.Vector3(0, 1, 0);
+                this.handGroup.position.copy(this.handBasePos);
+
+                this.handAnimation = {
+                    active: false,
+                    phase: -Math.PI / 2,
+                    speed: 0.2
+                };
+            }
+
+            triggerHandStroke() {
+                this.handAnimation.active = true;
+            }
+
+            updateHand(delta) {
+                if (this.handAnimation.active) {
+                    this.handAnimation.phase += delta * 8; 
+                    
+                    const sineVal = Math.sin(this.handAnimation.phase);
+                    const norm = (sineVal + 1) / 2; 
+                    this.handGroup.position.y = 1 + (norm * 2.5);
+
+                    if (this.handAnimation.phase > Math.PI * 1.5) {
+                         this.handAnimation.active = false;
+                         this.handGroup.position.y = 1; 
+                         this.handAnimation.phase = -Math.PI / 2;
+                    }
+                }
+            }
+
+            updateHandSkin(skinKey) {
+                const data = HAND_SKINS[skinKey] || HAND_SKINS['default'];
+                this.handSkinMat.color.setHex(data.color);
+                this.handSkinMat.metalness = data.metalness || 0;
+                this.handSkinMat.roughness = data.roughness || 0.35;
+                if (data.emissive) {
+                    this.handSkinMat.emissive.setHex(data.emissive);
+                    this.handSkinMat.emissiveIntensity = 0.8;
+                } else {
+                    this.handSkinMat.emissive.setHex(0x000000);
+                    this.handSkinMat.emissiveIntensity = 0;
+                }
+            }
+
+            // --- 10 DETAILED 3D ARCHITECTURAL ROOMS (WITH COLORFUL FLOORS & LIGHTS) ---
+            loadRoom(roomId) {
+                while (this.roomGroup.children.length > 0) {
+                    this.roomGroup.remove(this.roomGroup.children[0]);
+                }
+
+                // Lowered floor at y = -1.8 so balls never clip!
+                const floorGeo = new THREE.PlaneGeometry(42, 42);
+                const floorMat = new THREE.MeshStandardMaterial({ color: 0x141829, roughness: 0.25, metalness: 0.3 });
+                const floor = new THREE.Mesh(floorGeo, floorMat);
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.y = -1.8;
+                floor.receiveShadow = true;
+                this.roomGroup.add(floor);
+
+                switch(roomId) {
+                    case 0: { // Minimalist Glass Studio
+                        floorMat.color.setHex(0x131a30);
+                        floorMat.roughness = 0.1;
+                        this.skyMat.color.setHex(0x0c1329);
+
+                        // Polished glass panels with metallic trims
+                        for (let i = -3; i <= 3; i++) {
+                            const pGeo = new THREE.BoxGeometry(2.8, 10, 0.15);
+                            const pMat = new THREE.MeshPhysicalMaterial({ color: 0x38bdf8, transmission: 0.85, roughness: 0.05 });
+                            const panel = new THREE.Mesh(pGeo, pMat);
+                            panel.position.set(i * 3.2, 3.2, -7.5);
+                            this.roomGroup.add(panel);
+                        }
+                        // Ceiling illuminated ring
+                        const ring = new THREE.Mesh(new THREE.TorusGeometry(6.5, 0.12, 16, 64), new THREE.MeshBasicMaterial({ color: 0xec4899 }));
+                        ring.rotation.x = Math.PI / 2;
+                        ring.position.set(0, 8.5, 0);
+                        this.roomGroup.add(ring);
+                        break;
+                    }
+                    case 1: { // Cyber Gamer Bedroom
+                        floorMat.color.setHex(0x1a1236);
+                        this.skyMat.color.setHex(0x0e0924);
+
+                        // Gaming desk with illuminated RGB dual monitors
+                        const desk = new THREE.Mesh(new THREE.BoxGeometry(10, 0.3, 3), new THREE.MeshStandardMaterial({ color: 0x0f0f17 }));
+                        desk.position.set(0, 0.5, -6.5);
+                        this.roomGroup.add(desk);
+
+                        [-2.2, 2.2].forEach(x => {
+                            const mon = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.2, 0.2), new THREE.MeshBasicMaterial({ color: 0x06b6d4 }));
+                            mon.position.set(x, 2.0, -6.3);
+                            this.roomGroup.add(mon);
+                        });
+
+                        // Hexagonal acoustic wall panels
+                        for (let x = -4; x <= 4; x += 2) {
+                            const hex = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.2, 6), new THREE.MeshStandardMaterial({ color: 0x3b0764 }));
+                            hex.rotation.x = Math.PI / 2;
+                            hex.position.set(x, 5.5, -7.2);
+                            this.roomGroup.add(hex);
+                        }
+                        break;
+                    }
+                    case 2: { // Skyline Penthouse
+                        floorMat.color.setHex(0x3b2416); // Hardwood parquet
+                        floorMat.roughness = 0.2;
+                        this.skyMat.color.setHex(0x050814);
+
+                        // Floor-to-ceiling panoramic glass
+                        const glassWall = new THREE.Mesh(new THREE.PlaneGeometry(35, 14), new THREE.MeshPhysicalMaterial({ transmission: 0.9, roughness: 0.05 }));
+                        glassWall.position.set(0, 5, -8.5);
+                        this.roomGroup.add(glassWall);
+
+                        // 12 Detailed illuminated skyscrapers outside
+                        for (let i = -6; i <= 6; i++) {
+                            const h = 8 + Math.random() * 9;
+                            const bMesh = new THREE.Mesh(new THREE.BoxGeometry(2.0, h, 2.0), new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4 }));
+                            bMesh.position.set(i * 2.8, h / 2 - 2, -14);
+                            this.roomGroup.add(bMesh);
+
+                            const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.15), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+                            beacon.position.set(i * 2.8, h - 2, -14);
+                            this.roomGroup.add(beacon);
+                        }
+                        break;
+                    }
+                    case 3: { // Cyberpunk Alley
+                        floorMat.color.setHex(0x0b0e14); // Wet reflective asphalt
+                        floorMat.roughness = 0.04;
+                        this.skyMat.color.setHex(0x080812);
+
+                        [-6.5, 6.5].forEach(x => {
+                            const wall = new THREE.Mesh(new THREE.BoxGeometry(1, 14, 22), new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.85 }));
+                            wall.position.set(x, 4.5, 0);
+                            this.roomGroup.add(wall);
+                        });
+
+                        const neon1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 2.2), new THREE.MeshBasicMaterial({ color: 0xec4899 }));
+                        neon1.position.set(-5.8, 4, -4);
+                        this.roomGroup.add(neon1);
+
+                        const neon2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 3, 2.5), new THREE.MeshBasicMaterial({ color: 0x06b6d4 }));
+                        neon2.position.set(5.8, 3.5, -3);
+                        this.roomGroup.add(neon2);
+                        break;
+                    }
+                    case 4: { // Ancient Marble Pantheon
+                        floorMat.color.setHex(0xf8fafc);
+                        floorMat.roughness = 0.22;
+                        this.skyMat.color.setHex(0x1e293b);
+
+                        for (let i = -3; i <= 3; i += 1.5) {
+                            const col = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.75, 10, 24), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3 }));
+                            col.position.set(i * 3.0, 3.2, -6.8);
+                            col.castShadow = true;
+                            this.roomGroup.add(col);
+                        }
+
+                        const beam = new THREE.Mesh(new THREE.BoxGeometry(22, 1.2, 1.8), new THREE.MeshStandardMaterial({ color: 0xe2e8f0 }));
+                        beam.position.set(0, 8.5, -6.8);
+                        this.roomGroup.add(beam);
+                        break;
+                    }
+                    case 5: { // Royal Golden Palace
+                        floorMat.color.setHex(0x500724); // Royal crimson marble
+                        floorMat.roughness = 0.3;
+                        this.skyMat.color.setHex(0x200511);
+
+                        for (let i = -2; i <= 2; i += 2) {
+                            const gCol = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.8, 9, 16), new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.95, roughness: 0.1 }));
+                            gCol.position.set(i * 4.2, 2.7, -6.5);
+                            this.roomGroup.add(gCol);
+                        }
+
+                        const chRing = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.12, 12, 32), new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.9 }));
+                        chRing.rotation.x = Math.PI / 2;
+                        chRing.position.set(0, 8.0, 0);
+                        this.roomGroup.add(chRing);
+                        break;
+                    }
+                    case 6: { // Orbital Space Deck
+                        floorMat.color.setHex(0x0f172a);
+                        this.skyMat.color.setHex(0x020617);
+
+                        const earth = new THREE.Mesh(new THREE.SphereGeometry(9, 32, 32), new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.7 }));
+                        earth.position.set(0, -3.5, -20);
+                        this.roomGroup.add(earth);
+
+                        [-5, 5].forEach(x => {
+                            const beam = new THREE.Mesh(new THREE.BoxGeometry(1, 14, 1), new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 }));
+                            beam.position.set(x, 5, -8);
+                            this.roomGroup.add(beam);
+                        });
+                        break;
+                    }
+                    case 7: { // Bioluminescent Abyss
+                        floorMat.color.setHex(0x031d36);
+                        this.skyMat.color.setHex(0x021324);
+
+                        for (let i = -3; i <= 3; i += 2) {
+                            const coral = new THREE.Mesh(new THREE.ConeGeometry(0.8, 7, 8), new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 0.7 }));
+                            coral.position.set(i * 3.6, 1.7, -5.8);
+                            this.roomGroup.add(coral);
+                        }
+                        break;
+                    }
+                    case 8: { // Obsidian Lava Forge
+                        floorMat.color.setHex(0x18181b);
+                        this.skyMat.color.setHex(0x270707);
+
+                        const lavaMesh = new THREE.Mesh(new THREE.BoxGeometry(18, 0.05, 2.5), new THREE.MeshBasicMaterial({ color: 0xff3b00 }));
+                        lavaMesh.position.set(0, -1.78, -3.5);
+                        this.roomGroup.add(lavaMesh);
+                        break;
+                    }
+                    case 9: { // Grand Kremlin Palace & Red Square (10th Room)
+                        floorMat.color.setHex(0x451a1a); // Red Square granite blocks
+                        floorMat.roughness = 0.4;
+                        this.skyMat.color.setHex(0x1a0707);
+
+                        const wall = new THREE.Mesh(new THREE.BoxGeometry(22, 6, 1.5), new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.75 }));
+                        wall.position.set(0, 1.2, -8.5);
+                        wall.receiveShadow = true;
+                        this.roomGroup.add(wall);
+
+                        for (let x = -10; x <= 10; x += 2) {
+                            const bat = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 1.5), new THREE.MeshStandardMaterial({ color: 0x991b1b }));
+                            bat.position.set(x, 4.8, -8.5);
+                            this.roomGroup.add(bat);
+                        }
+
+                        // Spasskaya Tower
+                        const tower = new THREE.Mesh(new THREE.BoxGeometry(4.6, 10, 2.5), new THREE.MeshStandardMaterial({ color: 0x991b1b }));
+                        tower.position.set(0, 3.2, -9.5);
+                        this.roomGroup.add(tower);
+
+                        const spire = new THREE.Mesh(new THREE.ConeGeometry(1.4, 5.5, 8), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.35 }));
+                        spire.position.set(0, 10.5, -9.5);
+                        this.roomGroup.add(spire);
+
+                        // Radiant Kremlin Ruby Star
+                        const starMesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.7), new THREE.MeshStandardMaterial({
+                            color: 0xef4444,
+                            emissive: 0xff0000,
+                            emissiveIntensity: 2.2
+                        }));
+                        starMesh.position.set(0, 13.8, -9.5);
+                        this.roomGroup.add(starMesh);
+
+                        const chRing = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.1, 10, 32), new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.95, roughness: 0.1 }));
+                        chRing.rotation.x = Math.PI / 2;
+                        chRing.position.set(0, 8.2, 0);
+                        this.roomGroup.add(chRing);
+                        break;
+                    }
+                }
+            }
+
+            // --- REALISTIC 3D HUMAN FACE WITH FULL ORAL CAVITY & FACE SPLATS ---
+            updateFace(faceKey) {
+                while (this.faceGroup.children.length > 0) {
+                    this.faceGroup.remove(this.faceGroup.children[0]);
+                }
+                this.faceParts = {};
+                this.faceSplats = [];
+                if (!faceKey) return;
+
+                const data = FACES_DATA[faceKey];
+                if (!data) return;
+
+                const skinMat = new THREE.MeshStandardMaterial({ color: 0xf5d0b5, roughness: 0.32 });
+                const hairMat = new THREE.MeshStandardMaterial({ color: data.hairColor, roughness: 0.6 });
+
+                const headGroup = new THREE.Group();
+                headGroup.position.set(0, 6.2, -2.8);
+                headGroup.lookAt(0, 4.8, 0);
+                this.faceGroup.add(headGroup);
+                this.faceParts.root = headGroup;
+
+                // Sculpted Head Cranium
+                const head = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.3, 2.0), skinMat);
+                headGroup.add(head);
+                this.faceParts.head = head;
+
+                // Nose
+                const nose = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.55, 4), skinMat);
+                nose.position.set(0, 0, 1.15);
+                nose.rotation.x = -Math.PI / 2;
+                head.add(nose);
+
+                // Expressive Eyes with Pupils
+                [-0.5, 0.5].forEach(x => {
+                    const eye = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.28, 0.1), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+                    eye.position.set(x, 0.35, 1.05);
+                    const pupil = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.12), new THREE.MeshBasicMaterial({ color: 0x1e293b }));
+                    pupil.position.set(0, 0, 0.02);
+                    eye.add(pupil);
+                    head.add(eye);
+                });
+
+                // Hair Volume
+                const hairTop = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.8, 2.2), hairMat);
+                hairTop.position.set(0, 1.25, 0);
+                head.add(hairTop);
+
+                if (!data.isBoy) {
+                    const hairLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.2, 3.4, 8), hairMat);
+                    hairLeft.position.set(-1.45, -0.4, -0.2);
+                    head.add(hairLeft);
+                    const hairRight = hairLeft.clone();
+                    hairRight.position.set(1.45, -0.4, -0.2);
+                    head.add(hairRight);
+
+                    const bodyGroup = new THREE.Group();
+                    bodyGroup.position.set(0, -2.2, 0);
+                    headGroup.add(bodyGroup);
+
+                    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.5, 1.2, 12), skinMat);
+                    bodyGroup.add(neck);
+
+                    const throatLump = new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 12), skinMat);
+                    throatLump.position.set(0, -0.1, 0.45);
+                    neck.add(throatLump);
+                    this.faceParts.throatLump = throatLump;
+
+                    const clothMat = new THREE.MeshStandardMaterial({ color: data.clothingColor || 0xffffff, roughness: 0.5 });
+                    const chest = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.5, 1.2), clothMat);
+                    chest.position.set(0, -1.0, 0);
+                    bodyGroup.add(chest);
+
+                    const bScale = data.bustScale || 0.8;
+                    const breastGeo = new THREE.SphereGeometry(0.5 * bScale, 16, 16);
+                    const leftB = new THREE.Mesh(breastGeo, clothMat);
+                    leftB.position.set(-0.55, -0.8, 0.6);
+                    bodyGroup.add(leftB);
+                    const rightB = leftB.clone();
+                    rightB.position.set(0.55, -0.8, 0.6);
+                    bodyGroup.add(rightB);
+                }
+
+                // ORAL CAVITY (UPPER LIP, LOWER LIP, TEETH, TONGUE)
+                const mouthGroup = new THREE.Group();
+                mouthGroup.position.set(0, -0.65, 0.95);
+                head.add(mouthGroup);
+                this.faceParts.mouthGroup = mouthGroup;
+
+                const cavityMat = new THREE.MeshBasicMaterial({ color: 0x3b0a16 });
+                const cavity = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.6), cavityMat);
+                cavity.position.set(0, -0.1, -0.2);
+                mouthGroup.add(cavity);
+
+                const teethMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
+                const upperTeeth = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.15), teethMat);
+                upperTeeth.position.set(0, 0.08, -0.05);
+                mouthGroup.add(upperTeeth);
+
+                const lipMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e, roughness: 0.3 });
+                const upperLip = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.16, 0.2), lipMat);
+                upperLip.position.set(0, 0.16, 0.05);
+                mouthGroup.add(upperLip);
+
+                const lowerJaw = new THREE.Group();
+                lowerJaw.position.set(0, -0.15, 0);
+                mouthGroup.add(lowerJaw);
+                this.faceParts.lowerJaw = lowerJaw;
+
+                const lowerLip = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.16, 0.2), lipMat);
+                lowerLip.position.set(0, -0.1, 0.05);
+                lowerJaw.add(lowerLip);
+
+                const lowerTeeth = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.1, 0.15), teethMat);
+                lowerTeeth.position.set(0, 0.02, -0.05);
+                lowerJaw.add(lowerTeeth);
+
+                const tongue = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), new THREE.MeshStandardMaterial({ color: 0xe11d48 }));
+                tongue.scale.set(1.2, 0.4, 1.0);
+                tongue.position.set(0, -0.05, -0.1);
+                lowerJaw.add(tongue);
+
+                // Container for liquid splats on face
+                this.faceSplatContainer = new THREE.Group();
+                head.add(this.faceSplatContainer);
+            }
+
+            // Spawn liquid droplets directly on the human's face and play swallowing sound!
+            triggerFaceEat(type) {
+                this.faceEatAnim.active = true;
+                this.faceEatAnim.time = 0;
+
+                // Play the authentic throat swallowing sound!
+                audioManager.playGulp();
+
+                // Spawn 6 to 10 liquid splats on the person's face/lips/chin!
+                if (this.faceSplatContainer) {
+                    const count = 7;
+                    const rainbowPalette = [0xff0055, 0xff7700, 0xffea00, 0x00e676, 0x00e5ff, 0x2979ff, 0xd500f9];
+
+                    for (let i = 0; i < count; i++) {
+                        let col = (type === 'nuclear') ? 0x39ff14 : (type === 'yellow') ? 0xfbbf24 : 0xffffff;
+                        if (type === 'rainbow') {
+                            col = rainbowPalette[Math.floor(Math.random() * rainbowPalette.length)];
+                        }
+
+                        const splatGeo = new THREE.CircleGeometry(0.08 + Math.random() * 0.1, 12);
+                        const splatMat = new THREE.MeshBasicMaterial({
+                            color: col,
+                            transparent: true,
+                            opacity: 0.95,
+                            side: THREE.DoubleSide
+                        });
+                        const splat = new THREE.Mesh(splatGeo, splatMat);
+
+                        // Attach on front surface of face around lips and chin
+                        splat.position.set(
+                            (Math.random() - 0.5) * 0.8,
+                            -0.4 + (Math.random() - 0.5) * 0.7,
+                            1.06 + Math.random() * 0.03
+                        );
+                        this.faceSplatContainer.add(splat);
+
+                        this.faceSplats.push({
+                            mesh: splat,
+                            life: 4.5,
+                            maxLife: 4.5
+                        });
+                    }
+                }
+            }
+
+            updateFaceAnim(delta) {
+                if (!this.faceEatAnim.active || !this.faceParts.lowerJaw) return;
+
+                this.faceEatAnim.time += delta;
+                const t = this.faceEatAnim.time;
+
+                if (t < 0.25) {
+                    this.faceParts.lowerJaw.position.y = -0.15 - (t / 0.25) * 0.45;
+                } else if (t < 0.55) {
+                    const p = (t - 0.25) / 0.3;
+                    this.faceParts.lowerJaw.position.y = -0.6 + p * 0.45;
+                    if (this.faceParts.throatLump) {
+                        this.faceParts.throatLump.position.y = -0.1 + Math.sin(p * Math.PI) * 0.45;
+                        this.faceParts.throatLump.scale.set(1.35, 1.35, 1.35);
+                    }
+                } else if (t < 0.8) {
+                    this.faceParts.lowerJaw.position.y = -0.15;
+                    if (this.faceParts.throatLump) {
+                        this.faceParts.throatLump.position.y = -0.1;
+                        this.faceParts.throatLump.scale.set(1, 1, 1);
+                    }
+                } else {
+                    this.faceEatAnim.active = false;
+                    this.faceParts.lowerJaw.position.y = -0.15;
+                }
+            }
+
+            pulseBalls(isBig) {
+                const add = isBig ? 0.4 : 0.1;
+                const scale = this.ballLeft.scale.x + add;
+                this.ballLeft.scale.set(scale, scale, scale);
+                this.ballRight.scale.set(scale, scale, scale);
+            }
+
+            // --- REALISTIC FLUID DROPLETS, RAINBOW DROPS & FLOOR PUDDLES ---
+            erupt(type) {
+                const count = game.state.ultraGraphics ? 220 : 70;
+                const rainbowPalette = [0xff0055, 0xff7700, 0xffea00, 0x00e676, 0x00e5ff, 0x2979ff, 0xd500f9];
+                let isNuclear = (type === 'nuclear');
+
+                for (let i = 0; i < count; i++) {
+                    let col = 0xffffff;
+                    if (type === 'nuclear') col = 0x39ff14;
+                    else if (type === 'yellow') col = 0xfbbf24;
+                    else if (type === 'rainbow') {
+                        col = rainbowPalette[i % rainbowPalette.length];
+                    }
+
+                    const dropGeo = new THREE.SphereGeometry(0.12, 8, 8);
+                    const dropMat = new THREE.MeshPhysicalMaterial({
+                        color: col,
+                        roughness: 0.05,
+                        metalness: 0.05,
+                        transmission: 0.4,
+                        clearcoat: 0.8,
+                        emissive: (type === 'nuclear') ? 0x39ff14 : (type === 'rainbow' ? col : 0x000000),
+                        emissiveIntensity: (type === 'nuclear') ? 1.5 : (type === 'rainbow' ? 0.5 : 0)
+                    });
+
+                    const mesh = new THREE.Mesh(dropGeo, dropMat);
+                    mesh.position.set(
+                        (Math.random() - 0.5) * 0.15,
+                        5.0,
+                        (Math.random() - 0.5) * 0.5
+                    );
+
+                    const velocity = new THREE.Vector3(
+                        (Math.random() - 0.5) * 4.2,
+                        Math.random() * 7.5 + 4.5,
+                        (Math.random() - 0.5) * 4.2
+                    );
+
+                    if (game.state.equippedFace) {
+                        velocity.z -= Math.random() * 2.8;
+                    }
+
+                    this.scene.add(mesh);
+                    this.particles.push({
+                        mesh,
+                        velocity,
+                        color: col,
+                        life: 2.2
+                    });
+                }
+            }
+
+            spawnPuddle(pos, color) {
+                const puddleGeo = new THREE.CircleGeometry(0.25 + Math.random() * 0.35, 16);
+                const puddleMat = new THREE.MeshStandardMaterial({
+                    color: color,
+                    roughness: 0.05,
+                    transparent: true,
+                    opacity: 0.85
+                });
+                const puddle = new THREE.Mesh(puddleGeo, puddleMat);
+                puddle.rotation.x = -Math.PI / 2;
+                puddle.position.set(pos.x, -1.78, pos.z);
+                this.scene.add(puddle);
+
+                this.puddles.push({
+                    mesh: puddle,
+                    life: 6.0,
+                    maxLife: 6.0
+                });
+            }
+
+            updateParticles(delta) {
+                const gravity = new THREE.Vector3(0, -9.8, 0);
+
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    p.velocity.addScaledVector(gravity, delta);
+                    p.mesh.position.addScaledVector(p.velocity, delta);
+
+                    const speed = p.velocity.length();
+                    p.mesh.scale.set(0.85, 0.85, Math.min(2.5, 1.0 + speed * 0.15));
+                    p.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), p.velocity.clone().normalize());
+
+                    p.life -= delta;
+
+                    if (p.mesh.position.y <= -1.75) {
+                        if (Math.random() < 0.25 && this.puddles.length < 40) {
+                            this.spawnPuddle(p.mesh.position, p.color);
+                        }
+                        this.scene.remove(p.mesh);
+                        p.mesh.geometry.dispose();
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+
+                    if (p.life <= 0) {
+                        this.scene.remove(p.mesh);
+                        p.mesh.geometry.dispose();
+                        this.particles.splice(i, 1);
+                    }
+                }
+
+                // Floor puddles decay slowly over 6 seconds
+                for (let i = this.puddles.length - 1; i >= 0; i--) {
+                    const pud = this.puddles[i];
+                    pud.life -= delta;
+                    pud.mesh.material.opacity = (pud.life / pud.maxLife) * 0.85;
+
+                    if (pud.life <= 0) {
+                        this.scene.remove(pud.mesh);
+                        pud.mesh.geometry.dispose();
+                        this.puddles.splice(i, 1);
+                    }
+                }
+
+                // Droplets on human face slide and fade over 4.5 seconds
+                for (let i = this.faceSplats.length - 1; i >= 0; i--) {
+                    const splat = this.faceSplats[i];
+                    splat.life -= delta;
+                    splat.mesh.position.y -= delta * 0.02; // Gentle drip!
+                    splat.mesh.material.opacity = (splat.life / splat.maxLife) * 0.95;
+
+                    if (splat.life <= 0) {
+                        if (splat.mesh.parent) splat.mesh.parent.remove(splat.mesh);
+                        splat.mesh.geometry.dispose();
+                        this.faceSplats.splice(i, 1);
+                    }
+                }
+            }
+
+            // CRITICAL FIX: Base spheres ALWAYS match equipped skin!
+            updateSkin(skinKey) {
+                const skin = SKINS_DATA[skinKey];
+                if (skin) {
+                    this.bodyMat.color.setHex(skin.color);
+                    this.bodyMat.roughness = skin.roughness;
+                    this.bodyMat.metalness = skin.metalness;
+                    
+                    // Both balls always get skin color and properties!
+                    this.ballMat.color.setHex(skin.color);
+                    this.ballMat.roughness = skin.roughness;
+                    this.ballMat.metalness = skin.metalness;
+                    this.ballLeft.material = this.ballMat;
+                    this.ballRight.material = this.ballMat;
+                }
+            }
+
+            setUltraGraphics(ultra) {
+                this.renderer.shadowMap.enabled = ultra;
+                this.renderer.setPixelRatio(ultra ? Math.min(window.devicePixelRatio, 2) : 1);
+            }
+
+            onWindowResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                const delta = Math.min(this.clock.getDelta(), 0.1);
+                const time = this.clock.getElapsedTime();
+
+                this.controls.update();
+
+                this.updateParticles(delta);
+                this.updateHand(delta);
+                this.updateFaceAnim(delta);
+
+                let targetScale = 0.6 + (game.state.currentProgress / 9) * 0.9;
+                if (game.state.currentProgress === 0) targetScale = 0.6;
+                this.ballLeft.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 5);
+                this.ballRight.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 5);
+
+                const currentSkin = game.state.equippedSkin;
+                if (currentSkin === 'mystic') {
+                    const r = Math.sin(time) * 0.5 + 0.5;
+                    const g = Math.sin(time + 2) * 0.5 + 0.5;
+                    const b = Math.sin(time + 4) * 0.5 + 0.5;
+                    this.bodyMat.color.setRGB(r, g, b);
+                    this.ballMat.color.setRGB(r, g, b);
+                } else if (currentSkin === 'plasma') {
+                    const p = Math.sin(time * 6) * 0.3 + 0.7;
+                    this.bodyMat.emissive.setHex(0xd946ef);
+                    this.bodyMat.emissiveIntensity = p;
+                } else if (currentSkin === 'nuclear') {
+                    const p = Math.sin(time * 4) * 0.2 + 0.8;
+                    this.bodyMat.emissive.setHex(0x39ff14);
+                    this.bodyMat.emissiveIntensity = p;
+                }
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        const sceneManager = new SceneManager();
+        window.sceneManager = sceneManager;
+
+        // --- 3 MINI-GAMES WITH READY-HOVER STATES & ACCESSIBLE CONTROLS ---
+        class MiniGamesManager {
+            constructor() {
+                this.canvas = document.getElementById('mg-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.currentGame = 'flappy';
+                this.running = false;
+                this.score = 0;
+                this.animFrame = null;
+
+                // Flappy: Gentle, relaxed, floaty physics
+                this.flappy = {
+                    y: 220, vy: 0, gravity: 0.14, jump: -4.0,
+                    pipes: [], started: false, time: 0
+                };
+
+                // Doodle Jump: Comfortable, predictable physics
+                this.doodle = {
+                    x: 220, y: 320, vx: 0, vy: -5.8, gravity: 0.14, jump: -5.8,
+                    platforms: [], camY: 0
+                };
+
+                // Click Duel: Rebalanced, humanly beatable bot
+                this.duel = {
+                    active: false, pClicks: 0, botClicks: 0, timeLeft: 12.0,
+                    botTimer: null, pHandY: 0, bHandY: 0
+                };
+
+                this.setupControls();
+                this.setupDuelCanvases();
+            }
+
+            init() {
+                this.switchGame(this.currentGame);
+            }
+
+            stop() {
+                this.running = false;
+                if (this.animFrame) cancelAnimationFrame(this.animFrame);
+                if (this.duel.botTimer) clearInterval(this.duel.botTimer);
+            }
+
+            switchGame(gameKey) {
+                this.stop();
+                this.currentGame = gameKey;
+                ['flappy', 'doodle', 'duel'].forEach(k => {
+                    const b = document.getElementById(`mg-tab-${k}`);
+                    if (b) b.classList.toggle('active', k === gameKey);
+                });
+
+                const duelOverlay = document.getElementById('duel-overlay');
+                const screenOverlay = document.getElementById('mg-screen-overlay');
+                const touchControls = document.getElementById('doodle-touch-controls');
+                const title = document.getElementById('mg-title');
+                const desc = document.getElementById('mg-desc');
+
+                duelOverlay.classList.add('hidden');
+                screenOverlay.classList.remove('hidden');
+
+                if (gameKey === 'doodle') {
+                    touchControls.classList.remove('hidden');
+                } else {
+                    touchControls.classList.add('hidden');
+                }
+
+                if (gameKey === 'flappy') {
+                    title.innerText = "🕊️ Flappy Yogurt";
+                    desc.innerText = "Йогурт парит на месте до твоего первого нажатия! Спокойная плавная скорость, широкие проёмы.";
+                } else if (gameKey === 'doodle') {
+                    title.innerText = "🦘 Doodle Yogurt";
+                    desc.innerText = "Прыгай по парящим платформам! Управляй стрелками снизу экрана или клавишами A/D.";
+                } else if (gameKey === 'duel') {
+                    title.innerText = "⚡ Клик-Дуэль 3D";
+                    desc.innerText = "Настоящая дуэль рук и йогуртов! Кликай по верхней зоне, чтобы перекликать ИИ-бота!";
+                }
+            }
+
+            startCurrentGame() {
+                document.getElementById('mg-screen-overlay').classList.add('hidden');
+                this.running = true;
+                this.score = 0;
+
+                if (this.currentGame === 'flappy') {
+                    this.flappy.y = 220;
+                    this.flappy.vy = 0;
+                    this.flappy.pipes = [];
+                    this.flappy.started = false; // Hover until first tap!
+                    this.flappy.time = 0;
+                    this.loopFlappy();
+                } else if (this.currentGame === 'doodle') {
+                    this.doodle.x = 220;
+                    this.doodle.y = 320;
+                    this.doodle.vx = 0;
+                    this.doodle.vy = this.doodle.jump;
+                    this.doodle.camY = 0;
+                    this.doodle.platforms = [
+                        { x: 140, y: 420, w: 200 }, // Safe wide starting platform!
+                        { x: 100, y: 320, w: 110 },
+                        { x: 270, y: 220, w: 110 },
+                        { x: 130, y: 120, w: 110 },
+                        { x: 230, y: 20, w: 110 }
+                    ];
+                    this.loopDoodle();
+                } else if (this.currentGame === 'duel') {
+                    this.startDuel();
+                }
+            }
+
+            // --- 1. FLAPPY YOGURT WITH HOVER-START & COMFORTABLE ARCADE SPEED ---
+            loopFlappy() {
+                if (!this.running) return;
+
+                this.flappy.time += 0.05;
+
+                // If not started yet, gently hover in place!
+                if (!this.flappy.started) {
+                    this.flappy.y = 220 + Math.sin(this.flappy.time * 3) * 12;
+                } else {
+                    this.flappy.vy += this.flappy.gravity;
+                    this.flappy.y += this.flappy.vy;
+
+                    // Spawn Pipes with generous gaps (190px gap!)
+                    if (this.flappy.pipes.length === 0 || this.flappy.pipes[this.flappy.pipes.length - 1].x < 320) {
+                        const gap = 190;
+                        const topH = 50 + Math.random() * 160;
+                        this.flappy.pipes.push({ x: 500, topH, botY: topH + gap, passed: false });
+                    }
+
+                    // Move pipes gently (1.4 px/frame)
+                    for (let i = this.flappy.pipes.length - 1; i >= 0; i--) {
+                        const p = this.flappy.pipes[i];
+                        p.x -= 1.4;
+
+                        if (!p.passed && p.x < 130) {
+                            p.passed = true;
+                            this.score++;
+                            audioManager.playTap();
+                        }
+
+                        // Forgiving collision check
+                        if (130 + 14 > p.x && 130 - 14 < p.x + 55) {
+                            if (this.flappy.y - 14 < p.topH || this.flappy.y + 14 > p.botY) {
+                                this.gameOverFlappy();
+                                return;
+                            }
+                        }
+
+                        if (p.x < -70) this.flappy.pipes.splice(i, 1);
+                    }
+
+                    if (this.flappy.y > 450 || this.flappy.y < 10) {
+                        this.gameOverFlappy();
+                        return;
+                    }
+                }
+
+                this.ctx.fillStyle = '#060812';
+                this.ctx.fillRect(0, 0, 480, 460);
+
+                // Draw Neon Pipes
+                for (let i = 0; i < this.flappy.pipes.length; i++) {
+                    const p = this.flappy.pipes[i];
+                    this.ctx.fillStyle = '#1e1b4b';
+                    this.ctx.strokeStyle = '#ec4899';
+                    this.ctx.lineWidth = 3;
+
+                    this.ctx.fillRect(p.x, 0, 55, p.topH);
+                    this.ctx.strokeRect(p.x, 0, 55, p.topH);
+
+                    this.ctx.fillRect(p.x, p.botY, 55, 460 - p.botY);
+                    this.ctx.strokeRect(p.x, p.botY, 55, 460 - p.botY);
+                }
+
+                // Draw 3D Yogurt Avatar
+                const tilt = this.flappy.started ? this.flappy.vy * 0.08 : 0;
+                this.drawYogurtAvatar(this.ctx, 130, this.flappy.y, tilt);
+
+                // Instructions if hovering
+                if (!this.flappy.started) {
+                    this.ctx.fillStyle = '#f472b6';
+                    this.ctx.font = 'bold 18px Outfit';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('НАЖМИ В ЛЮБОЕ МЕСТО ДЛЯ ВЗЛЁТА', 240, 320);
+                    this.ctx.textAlign = 'left';
+                }
+
+                // Score
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = 'bold 26px Outfit';
+                this.ctx.fillText(`Счет: ${this.score}`, 25, 40);
+
+                this.animFrame = requestAnimationFrame(() => this.loopFlappy());
+            }
+
+            drawYogurtAvatar(ctx, x, y, angle) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+
+                const currentSkin = SKINS_DATA[game.state.equippedSkin];
+                const skinHex = currentSkin ? '#' + currentSkin.color.toString(16).padStart(6, '0') : '#ffffff';
+
+                // Base Balls (Matching Skin!)
+                ctx.fillStyle = skinHex;
+                ctx.beginPath();
+                ctx.arc(-14, 10, 10, 0, Math.PI * 2);
+                ctx.arc(14, 10, 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Yogurt Cylinder Body
+                ctx.fillStyle = skinHex;
+                ctx.beginPath();
+                ctx.roundRect(-12, -20, 24, 30, [4, 4, 8, 8]);
+                ctx.fill();
+
+                // Pink Dome Cap
+                ctx.fillStyle = '#ec4899';
+                ctx.beginPath();
+                ctx.arc(0, -20, 12, Math.PI, 0);
+                ctx.fill();
+
+                // Black Slit
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(-2, -31, 4, 8);
+
+                ctx.restore();
+            }
+
+            gameOverFlappy() {
+                this.running = false;
+                const reward = this.score * (120 + game.state.rebirths * 60);
+                game.state.money += reward;
+                game.updateUI();
+
+                const box = document.getElementById('mg-reward-box');
+                box.classList.remove('hidden');
+                box.innerText = `Игра окончена! Счет: ${this.score}. Награда: +${reward.toLocaleString()} 💧`;
+                document.getElementById('mg-screen-overlay').classList.remove('hidden');
+            }
+
+            // --- 2. DOODLE YOGURT JUMP WITH RESPONSIVE ON-SCREEN BUTTONS ---
+            loopDoodle() {
+                if (!this.running) return;
+
+                this.doodle.vy += this.doodle.gravity;
+                this.doodle.y += this.doodle.vy;
+                this.doodle.x += this.doodle.vx;
+
+                if (this.doodle.x < 15) this.doodle.x = 465;
+                if (this.doodle.x > 465) this.doodle.x = 15;
+
+                // Smooth camera scrolling
+                if (this.doodle.y < 220) {
+                    const diff = 220 - this.doodle.y;
+                    this.doodle.y = 220;
+                    this.doodle.camY += diff;
+                    this.score = Math.floor(this.doodle.camY / 14);
+
+                    this.doodle.platforms.forEach(p => {
+                        p.y += diff;
+                    });
+                }
+
+                this.doodle.platforms.forEach(p => {
+                    if (p.y > 460) {
+                        p.y = -20;
+                        p.x = 20 + Math.random() * 340;
+                        p.w = 90 + Math.random() * 30;
+                    }
+
+                    if (this.doodle.vy > 0 &&
+                        this.doodle.x + 16 > p.x && this.doodle.x - 16 < p.x + p.w &&
+                        this.doodle.y + 18 >= p.y && this.doodle.y + 18 <= p.y + 18) {
+                        this.doodle.vy = this.doodle.jump;
+                        audioManager.playTap();
+                    }
+                });
+
+                this.ctx.fillStyle = '#060812';
+                this.ctx.fillRect(0, 0, 480, 460);
+
+                // Platforms
+                this.ctx.fillStyle = '#06b6d4';
+                this.doodle.platforms.forEach(p => {
+                    this.ctx.beginPath();
+                    this.ctx.roundRect(p.x, p.y, p.w, 14, 6);
+                    this.ctx.fill();
+                });
+
+                // Avatar
+                this.drawYogurtAvatar(this.ctx, this.doodle.x, this.doodle.y, 0);
+
+                // Score
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = 'bold 26px Outfit';
+                this.ctx.fillText(`Высота: ${this.score}м`, 25, 40);
+
+                if (this.doodle.y > 470) {
+                    this.gameOverDoodle();
+                    return;
+                }
+
+                this.animFrame = requestAnimationFrame(() => this.loopDoodle());
+            }
+
+            gameOverDoodle() {
+                this.running = false;
+                const reward = this.score * (18 + game.state.rebirths * 12);
+                game.state.money += reward;
+                game.updateUI();
+
+                const box = document.getElementById('mg-reward-box');
+                box.classList.remove('hidden');
+                box.innerText = `Падение! Высота: ${this.score}м. Награда: +${reward.toLocaleString()} 💧`;
+                document.getElementById('mg-screen-overlay').classList.remove('hidden');
+            }
+
+            // --- 3. REBALANCED & ACCESSIBLE CLICK DUEL ---
+            setupDuelCanvases() {
+                this.pCanvas = document.getElementById('duel-p-canvas');
+                this.bCanvas = document.getElementById('duel-b-canvas');
+                this.pCtx = this.pCanvas.getContext('2d');
+                this.bCtx = this.bCanvas.getContext('2d');
+            }
+
+            renderDuelActors() {
+                this.pCtx.clearRect(0, 0, 160, 140);
+                this.drawYogurtAvatar(this.pCtx, 80, 70, 0);
+                this.pCtx.fillStyle = '#f6c5a5';
+                this.pCtx.beginPath();
+                this.pCtx.roundRect(50, 40 + Math.sin(this.duel.pHandY) * 22, 60, 24, 12);
+                this.pCtx.fill();
+
+                this.bCtx.clearRect(0, 0, 160, 140);
+                this.drawYogurtAvatar(this.bCtx, 80, 70, 0);
+                this.bCtx.fillStyle = '#06b6d4';
+                this.bCtx.beginPath();
+                this.bCtx.roundRect(50, 40 + Math.sin(this.duel.bHandY) * 22, 60, 24, 12);
+                this.bCtx.fill();
+            }
+
+            startDuel() {
+                document.getElementById('duel-overlay').classList.remove('hidden');
+                this.duel.pClicks = 0;
+                this.duel.botClicks = 0;
+                this.duel.timeLeft = 12.0;
+                this.duel.active = true;
+                this.duel.pHandY = 0;
+                this.duel.bHandY = 0;
+
+                const botScoreEl = document.getElementById('duel-bot-score');
+                const pScoreEl = document.getElementById('duel-player-score');
+                const timerEl = document.getElementById('duel-timer');
+                const barEl = document.getElementById('duel-bar');
+
+                pScoreEl.innerText = '0';
+                botScoreEl.innerText = '0';
+
+                // REBALANCED BOT: Completely beatable by a human player at rebirth 4+!
+                // Rebirth 0: ~250ms (4.0 CPS), Rebirth 4: ~160ms (6.2 CPS)
+                const baseInterval = 250;
+                const reductionPerRebirth = 22;
+                const targetInterval = Math.max(135, baseInterval - (game.state.rebirths * reductionPerRebirth));
+
+                const scheduleNextBotClick = () => {
+                    if (!this.duel.active) return;
+                    // Natural human-like variance (±35ms)
+                    const delay = targetInterval + (Math.random() * 70 - 35);
+                    this.duel.botTimer = setTimeout(() => {
+                        if (!this.duel.active) return;
+                        this.duel.botClicks++;
+                        this.duel.bHandY += 0.8;
+                        botScoreEl.innerText = this.duel.botClicks;
+
+                        const total = this.duel.pClicks + this.duel.botClicks;
+                        const pct = total > 0 ? (this.duel.pClicks / total) * 100 : 50;
+                        barEl.style.width = `${pct}%`;
+
+                        this.renderDuelActors();
+                        scheduleNextBotClick();
+                    }, delay);
+                };
+
+                scheduleNextBotClick();
+
+                const timerInterval = setInterval(() => {
+                    if (!this.duel.active) {
+                        clearInterval(timerInterval);
+                        return;
+                    }
+                    this.duel.timeLeft -= 0.1;
+                    timerEl.innerText = `${Math.max(0, this.duel.timeLeft).toFixed(1)}с`;
+
+                    if (this.duel.timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        this.endDuel();
+                    }
+                }, 100);
+
+                this.renderDuelActors();
+            }
+
+            endDuel() {
+                this.duel.active = false;
+                if (this.duel.botTimer) clearTimeout(this.duel.botTimer);
+
+                const won = this.duel.pClicks > this.duel.botClicks;
+                let reward = 0;
+                let msg = '';
+
+                if (won) {
+                    reward = 6000 + (game.state.rebirths * 3000);
+                    game.state.money += reward;
+                    game.state.gems += 2;
+                    msg = `ПОБЕДА! Ты перекликал бота (${this.duel.pClicks} vs ${this.duel.botClicks})! Награда: +${reward.toLocaleString()} 💧 и +2 💎`;
+                } else {
+                    reward = 600;
+                    game.state.money += reward;
+                    msg = `ПОРАЖЕНИЕ! Бот победил (${this.duel.botClicks} vs ${this.duel.pClicks}). Утешительный приз: +${reward} 💧`;
+                }
+
+                game.updateUI();
+
+                document.getElementById('duel-overlay').classList.add('hidden');
+                const box = document.getElementById('mg-reward-box');
+                box.classList.remove('hidden');
+                box.innerText = msg;
+                document.getElementById('mg-screen-overlay').classList.remove('hidden');
+            }
+
+            setupControls() {
+                // Flappy click
+                this.canvas.addEventListener('click', () => {
+                    if (this.running && this.currentGame === 'flappy') {
+                        if (!this.flappy.started) this.flappy.started = true;
+                        this.flappy.vy = this.flappy.jump;
+                        audioManager.playTap();
+                    }
+                });
+
+                // Touch / on-screen buttons for Doodle Jump
+                const bLeft = document.getElementById('btn-doodle-left');
+                const bRight = document.getElementById('btn-doodle-right');
+
+                bLeft.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    if (this.running && this.currentGame === 'doodle') this.doodle.vx = -4.2;
+                });
+                bLeft.addEventListener('pointerup', () => {
+                    if (this.doodle.vx < 0) this.doodle.vx = 0;
+                });
+
+                bRight.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    if (this.running && this.currentGame === 'doodle') this.doodle.vx = 4.2;
+                });
+                bRight.addEventListener('pointerup', () => {
+                    if (this.doodle.vx > 0) this.doodle.vx = 0;
+                });
+
+                // Duel tap
+                document.getElementById('duel-player-zone').addEventListener('click', () => {
+                    if (this.duel.active) {
+                        this.duel.pClicks++;
+                        this.duel.pHandY += 0.8;
+                        document.getElementById('duel-player-score').innerText = this.duel.pClicks;
+                        audioManager.playTap();
+                        this.renderDuelActors();
+                    }
+                });
+
+                // Keyboard
+                window.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space' && this.running && this.currentGame === 'flappy') {
+                        if (!this.flappy.started) this.flappy.started = true;
+                        this.flappy.vy = this.flappy.jump;
+                        audioManager.playTap();
+                    }
+                    if (this.running && this.currentGame === 'doodle') {
+                        if (e.code === 'ArrowLeft' || e.code === 'KeyA') this.doodle.vx = -4.2;
+                        if (e.code === 'ArrowRight' || e.code === 'KeyD') this.doodle.vx = 4.2;
+                    }
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    if (this.running && this.currentGame === 'doodle') {
+                        if (e.code === 'ArrowLeft' || e.code === 'ArrowRight' || e.code === 'KeyA' || e.code === 'KeyD') {
+                            this.doodle.vx = 0;
+                        }
+                    }
+                });
+            }
+        }
+
+        const minigames = new MiniGamesManager();
+        window.minigames = minigames;
+
+    </script>
+</body>
+</html>
